@@ -1,0 +1,25 @@
+[project]
+name = "atlas"
+version = "0.1.0"
+description = "Typed command orchestrator with a custom local protocol to a native PC agent."
+authors = [
+    { name = "Vishesh Mistry", email = "vishhz.art@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.13.0",
+]
+
+[project.scripts]
+atlas = "atlas:main"
+
+[build-system]
+requires = ["uv_build>=0.11.6,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.1",
+    "pytest>=9.0.3",
+    "ruff>=0.15.10",
+]
