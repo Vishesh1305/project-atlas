@@ -1,0 +1,23 @@
+[apps.notepad]
+path = "notepad.exe"
+
+[apps.calculator]
+path = "calc.exe"
+
+[apps.notion]
+path = "C:\\Users\\vishe\\AppData\\Local\\Programs\\Notion\\Notion.exe"
+
+[apps.brave]
+path = "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
+
+[apps.gow] #temp
+path = "Z:\\Games-Win\\SteamLibrary\\steamapps\\common\\GodOfWar\\GoW.exe"
+
+[apps.spiderman]
+path = "Z:\\Games-Win\\SteamLibrary\\steamapps\\common\\Marvel's Spider-Man Remastered\\Spider-Man.exe"
+
+[apps.visual_studio]
+path = "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\devenv.exe"
+
+[apps.pycharm]
+path = "C:\\Users\\vishe\\AppData\\Local\\Programs\\PyCharm\\bin\\pycharm64.exe"
