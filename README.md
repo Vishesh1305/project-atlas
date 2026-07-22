@@ -4,6 +4,8 @@ A local-first personal assistant built for real daily use, and built from scratc
 
 ATLAS is an intent router and tool runner: every action is an explicit, validated, logged tool. No guessing, no magic. Commands come in (typed now, voice later), get parsed, validated, confirmed if sensitive, and executed deterministically.
 
+ATLAS is open source and extensible. The core ships, and users write their own agents and wire them in without modifying the core.
+
 > **Status:** Phase 0 - Foundations (in progress)
 
 ---
@@ -17,13 +19,36 @@ I'm a game programmer (C/C++, UE5) targeting Systems and Network programming rol
 
 This isn't a weekend hack. It's an incremental build with formal architecture decisions, phase gates, and tests at every step.
 
+ATLAS stays a personal assistant that each user runs on their own machine. It is not a hosted service, product, or company. The orchestration is the portfolio; the agents are the demo that proves it is real and general.
+
 ---
 
 ## Architecture
 
 ![System Architecture](docs/architecture.png)
 
-The Python orchestrator handles intent routing, validation, and logging. The C++ PC Agent (arriving in Phase 2) handles OS-level actions over a custom local protocol. The protocol boundary is the point. It's where the systems engineering lives.
+The orchestrator exposes a single **Tool registry**. Every capability is a Tool behind one interface, regardless of where the work happens. The registry is the seam the whole system hangs from: from the orchestrator's view, watering a plant and fetching the weather are both just Tools, and the registry does not care how each one does its job. That indifference is what makes ATLAS extensible.
+
+Three boundaries hang off the registry:
+
+- **Boundary A (outbound, owned):** a hand-written custom binary protocol to native agents and processes I control (the C++ PC Agent, the Poseidon controller).
+- **Boundary B (outbound, external):** an adapter layer that binds any external REST API to a custom command, with my own adapter and manifest design.
+- **Boundary C (inbound):** a command surface accepting input from a remote network client now, and voice later.
+
+The Python orchestrator handles intent routing, validation, and logging. The C++ PC Agent (arriving in Phase 2) handles OS-level actions over Boundary A. The protocol boundary is the point. It's where the systems engineering lives.
+
+---
+
+## Agents
+
+Agents are capabilities built on top of the Tool registry. They demonstrate that the orchestration is general across different domains. The planned set:
+
+| Agent | Domain | What it does |
+|-------|--------|--------------|
+| **Plutus** | Personal finance | Expense tracking, categorization, monthly reports with charts by sector, cashflow and savings forecasting. Market data is surfaced as information only. |
+| **Poseidon** | IoT | Plant watering on a self-built ESP32/Arduino controller with custom firmware, commanded over the network. |
+| **Athena** | News | Personalized news from APIs and RSS, summarized and scheduled, consumed through the standard tool interface. |
+| **Zeus** | Weather | Voice-driven. Reads back current conditions and the official forecast, including rain and snow probabilities reported honestly with their uncertainty. Built on top of the existing weather tool. |
 
 ---
 
@@ -33,6 +58,8 @@ The Python orchestrator handles intent routing, validation, and logging. The C++
 - Monorepo structure with component separation (`orchestrator/`, `pc_agent/`, `shared/`)
 - All foundational architecture decisions made and documented
 - Dev tooling selected: uv, Ruff, mypy, pytest
+- Tool abstract base class with a Template Method pattern (`run()` validates, `_execute()` acts)
+- Three stub tools with Pydantic input models and structured logging
 
 ### What's in progress (Phase 0)
 - Python REPL that dispatches typed commands through a Pydantic-validated tool registry
@@ -65,6 +92,8 @@ The Python orchestrator handles intent routing, validation, and logging. The C++
 | Type checking | mypy | Static analysis for a dynamically typed language |
 | Testing | pytest | Industry default, clear failures, plugin ecosystem |
 | Version control | GitHub Flow | Feature branches into stable `main` |
+
+The language split is layer-based, not percentage-mandated: agent and orchestration work lives in Python where the ecosystem is strongest, and low-level protocol-bound work lives in C++. Each layer uses the right tool, and the learning stays sequenced instead of stacking every hard thing at once.
 
 ---
 
@@ -110,4 +139,4 @@ Additional safeguards: app allowlist, directory allowlist, mandatory preview bef
 
 ## License
 
-*TBD*
+MIT. See [`LICENSE`](LICENSE) for the full text. You may use, modify, and build on ATLAS, including in closed or commercial products, with attribution as the only obligation.

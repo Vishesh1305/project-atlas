@@ -4,25 +4,40 @@
 
 ---
 
-## 📍 You Are Here
+## You Are Here
 
-**Current Phase:** Phase 0: Foundations (NOT YET STARTED)  
-**Status:** Pre-Project Planning Session COMPLETE. All 7 architectural decisions made. Awaiting Phase 0 Technical Plan presentation and approval in a new chat.
+**Current Phase:** Phase 0: Foundations (IN PROGRESS)
+**Status:** Steps 1 through 6 complete. Three stub tools built and validated. Currently at the Step 7 approval gate (Tool Registry).
 
-**Next action:** Open a new chat. Paste/reference this file. Request the Phase 0 Technical Plan. Approve it. Begin building.
+**Next action:** Approve the Step 7 (Tool Registry) technical plan, then build the registry.
 
 ---
 
-## ✅ Completed Work
+## Completed Work
 
 ### Pre-Project Planning Session - April 11, 2026
 - All 7 architectural decisions made and recorded in `DECISIONS.md`
 - High-level architecture diagram drafted (orchestrator + PC Agent + custom protocol)
-- Phase roadmap drafted (Phases 0–7+)
+- Phase roadmap drafted (Phases 0-7+)
+
+### Architecture and Scope Lock-In - June 19, 2026
+- Project identity, three-boundary architecture, final four-agent set, MIT license
+- Recorded as Decisions 8 through 18 in `DECISIONS.md`
+
+### Phase 0 Implementation (Steps 1-6) - July 2026
+- **Step 1:** Monorepo skeleton, `.gitignore`, `.gitattributes` (LF normalization), `.gitkeep` placeholders
+- **Step 2:** uv project initialized (`--package --name atlas --python 3.12`); Pydantic runtime dep; Ruff, mypy, pytest dev deps
+- **Step 3:** `pyproject.toml` configured for all three tools (newer table syntax for pytest)
+- **Step 4:** `logging_config.py` with `setup_logging()` (root DEBUG, console INFO, file DEBUG)
+- **Step 5:** `Tool` ABC in `base.py` (four abstract properties + Template Method: `run()` concrete, `_execute()` abstract)
+- **Step 6:** Three working stub tools with Pydantic input models, allowlist validation, and logging:
+  - `CalculateTool` (`CalculateInput`: `expression: str`)
+  - `OpenUrlTool` (`OpenUrlInput`: `url: HttpUrl`)
+  - `OpenAppTool` (`OpenAppInput`: `app_name: str`) with TOML allowlist loaded fail-fast at construction
 
 ---
 
-## 🏗️ Architectural Summary (the locked-in stack)
+## Architectural Summary (the locked-in stack)
 
 - **Languages:** Python (orchestrator), C++ (PC Agent, deferred to Phase 1/2)
 - **Python framework:** stdlib `cmd` + Pydantic
@@ -40,7 +55,7 @@ See `DECISIONS.md` for full reasoning on each choice.
 
 ---
 
-## 🗺️ Phase Roadmap (titles only)
+## Phase Roadmap (titles only)
 
 - **Phase 0:** Foundations: repo, venv, REPL, registry, schemas, logging, stub tools
 - **Phase 1:** Real local Python tools (calc, time, weather, news)
@@ -53,18 +68,40 @@ See `DECISIONS.md` for full reasoning on each choice.
 
 ---
 
-## 📂 Current File Tree
+## Current File Tree
 
-*Repo not yet initialized. Will be created in Phase 0 step 1.*
-
-### Planned Phase 0 structure:
-
-Project-Atlas/
+project-atlas/
 ├── orchestrator/
+│   ├── pyproject.toml
+│   ├── uv.lock
+│   ├── config/
+│   │   └── allowlist.toml
 │   └── src/
+│       └── atlas/
+│           ├── __init__.py
+│           ├── logging_config.py
+│           └── tools/
+│               ├── base.py
+│               ├── calculate.py
+│               ├── open_url.py
+│               └── open_app.py
 ├── pc_agent/
 ├── shared/
 ├── docs/
 ├── DECISIONS.md
-├── PROJECT_STATE.md
+├── PROJECT-STATE.md
 └── README.md
+
+---
+
+## Known Issues / Open Items
+
+- DECISIONS entries 8-18 generated in the June 19 brainstorm; confirm they are appended to `DECISIONS.md`
+- `PROJECT_STATE.md` (underscore, per Master Prompt) vs `PROJECT-STATE.md` (hyphen, actual repo file) naming mismatch; pick one
+- Phase 4 reminder: revisit Apple Calendar integration (iCloud web vs CalDAV vs Google Calendar)
+
+---
+
+## Next Action
+
+Approve the Step 7 (Tool Registry) technical plan, then implement `orchestrator/src/atlas/registry.py`.

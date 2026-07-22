@@ -1,3 +1,4 @@
+#Basically registers and retrieves tools
 import logging
 
 from atlas.tools.base import Tool
@@ -8,7 +9,9 @@ class ToolRegistry:
     def __init__(self):
         self.registry = {}
 
-    def register(self, tool_to_register):
+    def register(self, tool_to_register: Tool) -> None:
+        if tool_to_register.name in self.registry:
+            raise ValueError(f"Tool {tool_to_register.name} already registered")
         self.registry[tool_to_register.name] = tool_to_register
 
     def retrieve(self, tool_name : str) -> Tool | None:
