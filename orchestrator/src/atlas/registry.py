@@ -6,8 +6,8 @@ from atlas.tools.base import Tool
 logger = logging.getLogger(__name__)
 
 class ToolRegistry:
-    def __init__(self):
-        self.registry = {}
+    def __init__(self) -> None:
+        self.registry: dict[str, Tool] = {}
 
     def register(self, tool_to_register: Tool) -> None:
         if tool_to_register.name in self.registry:

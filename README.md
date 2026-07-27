@@ -63,7 +63,7 @@ Agents are capabilities built on top of the Tool registry. They demonstrate that
 
 ### What's in progress (Phase 0)
 - Python REPL that dispatches typed commands through a Pydantic-validated tool registry
-- Three stub tools (`util.calculate`, `pc.open_url`, `pc.open_app`) that log intent without performing real actions
+- Three stub tools (`calculate`, `open_url`, `open_app`) that log intent without performing real actions
 - Structured logging
 
 ### What's ahead
@@ -91,7 +91,7 @@ Agents are capabilities built on top of the Tool registry. They demonstrate that
 | Linting + formatting | Ruff | Single Rust binary, millisecond feedback, ecosystem standard |
 | Type checking | mypy | Static analysis for a dynamically typed language |
 | Testing | pytest | Industry default, clear failures, plugin ecosystem |
-| Version control | GitHub Flow | Feature branches into stable `main` |
+| Version control | GitHub Flow | Feature branches into stable \`main\` |
 
 The language split is layer-based, not percentage-mandated: agent and orchestration work lives in Python where the ecosystem is strongest, and low-level protocol-bound work lives in C++. Each layer uses the right tool, and the learning stays sequenced instead of stacking every hard thing at once.
 
@@ -99,7 +99,7 @@ The language split is layer-based, not percentage-mandated: agent and orchestrat
 
 ## Project Structure
 
-```
+\`\`\`
 Project-Atlas/
 ├── orchestrator/          # Python: intent routing, validation, tools, REPL
 │   ├── src/
@@ -112,7 +112,7 @@ Project-Atlas/
 ├── DECISIONS.md           # Formal architecture decision log
 ├── PROJECT-STATE.md       # Live phase status tracker
 └── README.md
-```
+\`\`\`
 
 ---
 
@@ -132,11 +132,11 @@ Additional safeguards: app allowlist, directory allowlist, mandatory preview bef
 
 ## Documentation
 
-- [`DECISIONS.md`](DECISIONS.md): every architectural decision with alternatives considered and reasoning
-- [`PROJECT-STATE.md`](PROJECT-STATE.md): current phase, completed work, next action
+- [\`DECISIONS.md\`](DECISIONS.md): every architectural decision with alternatives considered and reasoning
+- [\`PROJECT-STATE.md\`](PROJECT-STATE.md): current phase, completed work, next action
 
 ---
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE.txt) for the full text. You may use, modify, and build on ATLAS, including in closed or commercial products, with attribution as the only obligation.
+MIT. See [\`LICENSE\`](LICENSE) for the full text. You may use, modify, and build on ATLAS, including in closed or commercial products, with attribution as the only obligation.

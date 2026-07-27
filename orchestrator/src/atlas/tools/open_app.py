@@ -12,7 +12,7 @@ class OpenAppInput(BaseModel):
     app_name : str
 
 class OpenAppTool(Tool):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         toml_path = Path(__file__).parent.parent.parent.parent / "config" / "allowlist.toml"
         with open(toml_path, "rb") as f:
