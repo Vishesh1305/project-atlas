@@ -139,4 +139,4 @@ Additional safeguards: app allowlist, directory allowlist, mandatory preview bef
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE) for the full text. You may use, modify, and build on ATLAS, including in closed or commercial products, with attribution as the only obligation.
+MIT. See [`LICENSE`](LICENSE.txt) for the full text. You may use, modify, and build on ATLAS, including in closed or commercial products, with attribution as the only obligation.

@@ -46,6 +46,6 @@ check_untyped_defs = true
 plugins = ["pydantic.mypy"]
 
 #pytest config
-[tool.pytest]
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

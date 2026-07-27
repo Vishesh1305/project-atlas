@@ -7,9 +7,9 @@
 ## You Are Here
 
 **Current Phase:** Phase 0: Foundations (IN PROGRESS)
-**Status:** Steps 1 through 8 complete. Tool registry and typed command REPL both built, tested, and passing Ruff and mypy. Next is the package entry point.
+**Status:** Steps 1 through 9 complete. ATLAS launches via `uv run atlas`: logging active, registry built, three tools registered, REPL running. All files pass Ruff and mypy.
 
-**Next action:** Step 9, the entry point. Replace the `main()` stub in `__init__.py` with wiring that calls `setup_logging()`, builds the registry, registers the three tools, and launches `cmdloop()`.
+**Next action:** Step 10, the first pytest tests. Gets a full Technical Plan and approval gate before any test is written.
 
 ---
 
@@ -36,6 +36,7 @@
   - `OpenAppTool` (`OpenAppInput`: `app_name: str`) with TOML allowlist loaded fail-fast at construction
 - **Step 7:** `ToolRegistry` in `registry.py`. `register` keyed off `tool.name` with a duplicate-name collision guard raising `ValueError`; `retrieve` returning `Tool | None` with a logged warning on miss. Smoke-tested via `uv run python -c`.
 - **Step 8:** `AtlasRepl` in `repl.py`, a subclass of stdlib `cmd.Cmd`. Four commands (`do_calculate`, `do_open_app`, `do_open_url`, `do_quit`) built with the explicit `do_*` method approach (Option A). Empty-arg guards; `run()` fed a raw dict so validation stays inside the Template Method; `assert not None` narrowing after each retrieve; docstrings driving `help`; `emptyline` override returning `False`. Passes Ruff and mypy.
+- **Step 9:** `main()` in `__init__.py`, the composition root. Calls `setup_logging()` first, builds the `ToolRegistry`, registers the three tools, launches `AtlasRepl(registry).cmdloop()`. Wired to the `atlas = "atlas:main"` script hook, so `uv run atlas` starts the REPL. Logging confirmed live (INFO to console, DEBUG to `atlas.log`, append mode). Passes Ruff and mypy.
 
 ---
 
@@ -80,7 +81,7 @@ project-atlas/
 │   │   └── allowlist.toml
 │   └── src/
 │       └── atlas/
-│           ├── __init__.py        # main() stub, replaced in Step 9
+│           ├── __init__.py        # main() composition root
 │           ├── logging_config.py
 │           ├── registry.py
 │           ├── repl.py
@@ -93,6 +94,7 @@ project-atlas/
 ├── shared/
 ├── docs/
 ├── DECISIONS.md
+├── LICENSE
 ├── PROJECT-STATE.md
 └── README.md
 
@@ -101,16 +103,25 @@ project-atlas/
 ## Known Issues / Open Items
 
 - Dispatch chosen as Option A (explicit `do_*` methods). Revisit Option B (generic `default()` routing) as a documented decision if tool count grows or the extensibility milestone forces it.
-- No `default()` override yet; unknown commands show `cmd`'s stock `*** Unknown syntax`. Polish candidate.
+- No `default()` override yet; unknown commands show `cmd`'s stock `*** Unknown syntax` (e.g. `open notepad` instead of `open_app notepad`). Polish candidate.
 - Empty-arg guard uses `if not arg`, which does not catch all-whitespace input.
-- Shared empty-arg guard helper not extracted; the three guard messages can drift out of sync (the `open_url` missing-space bug was one instance, fixed locally, pushes with Step 9).
+- Guard messages have a double space in the empty-arg output (cosmetic; fold into next push touching those lines).
+- Shared empty-arg guard helper not extracted; the three guard messages can drift out of sync.
 - README names tools `util.calculate`, `pc.open_url`, `pc.open_app`, but code uses `calculate`, `open_url`, `open_app`. Reconcile before Step 12.
-- `LICENSE` file still missing; README links to it (MIT decided in Decision 18).
+- `atlas.log` uses a relative path, so it lands in the current working directory rather than a fixed location. Ignored by `.gitignore`. Revisit if a fixed log location is wanted.
 - `PROJECT_STATE.md` (underscore, per Master Prompt) vs `PROJECT-STATE.md` (hyphen, actual repo file) naming mismatch. Pick one.
 - Phase 4 reminder: revisit Apple Calendar integration (iCloud web vs CalDAV vs Google Calendar).
 
 ---
 
+## Resolved This Session
+
+- `LICENSE` file added (MIT, per Decision 18); README link is now live.
+- `[tool.pytest]` corrected to `[tool.pytest.ini_options]`, so `testpaths` and `pythonpath` are now active for Step 10.
+- `open_url` guard-message missing-space bug fixed.
+
+---
+
 ## Next Action
 
-Step 9: the package entry point. Replace the `main()` stub in `orchestrator/src/atlas/__init__.py` with wiring that calls `setup_logging()`, constructs the `ToolRegistry`, registers the three tools, and launches `AtlasRepl(registry).cmdloop()`. The `atlas = "atlas:main"` script hook in `pyproject.toml` is already waiting for it, so `uv run atlas` will launch the REPL once this lands.
+Step 10: the first pytest tests. New concept, taught before any code is written, with its own Technical Plan and approval gate. Likely targets: the registry collision guard (`ValueError` on duplicate), the `retrieve` miss returning `None`, and a tool's validation path through `run()`.
