@@ -248,7 +248,7 @@ This document records every significant architectural decision made during ATLAS
 
 **Alternatives considered:**
 - 80/20 C++ by mandate across all layers (under consideration; analysis above)
-- Python-only (already rejected in Decision 1)
+- Python-only (already rejected in Decision 1)  
 - C# agent layer (already rejected in Decision 1)
 
 **Reasoning:** Language should follow the shape of the problem. Most agent work is data, web, and AI, which is Python's home turf; most infrastructure work is low-level and protocol-bound, which is C++'s. A layer-based split lets each part use the right tool and keeps the learning sequenced (one wall at a time) instead of stacking Python-ecosystem learning, heavy C++, networking and threading, and AI-without-ecosystem all at once.
@@ -266,3 +266,72 @@ This document records every significant architectural decision made during ATLAS
 - GPL / copyleft (rejected: its purpose is to force downstream versions to stay open, which reduces adoption and can forbid commercial or company use. The goal here is maximum adoption and portfolio signal, the opposite of what copyleft optimizes for. It could also complicate a future closed product the builder might build on their own code.)
 
 **Reasoning:** The goal for ATLAS is adoption and portfolio signal, and permissive licensing maximizes both by letting the maximum number of people use it with zero friction; every user is distribution and evidence the design is good. MIT is the recognized default for this kind of project, short and readable, and signals ecosystem fluency to a hiring engineer or a CEO. It also keeps every future door open, including the builder's own option to later build a separate narrow commercial product, since permissive licensing leaves the author unrestricted. Selling ATLAS itself is explicitly not the path (see Decision 8); any future commercial effort would be a separate closed product, not ATLAS, which remains open under MIT.
+
+---
+
+## Decision 19: Agent Model (LLM Planner Above Deterministic Tools)
+**Date:** August 6, 2026
+**Status:** Provisional (detailed at agent-layer planning)
+
+**Decided:** ATLAS agents (Athena, Zeus, Plutus, Poseidon) are implemented as an
+LLM planner layer that sits *above* the deterministic tool registry, not as LLMs
+embedded inside individual tools. The LLM perceives intent, decomposes goals,
+decides, and chains tool calls across multi-step workflows. The tools it calls
+stay single-purpose, deterministic, and independently testable.
+
+Autonomy is scoped by the existing security policy: the planner may chain freely
+over `none`-sensitivity tools (fetch, calculate, read, summarize) without per-step
+human oversight. The moment a plan reaches a `confirm` / `PIN` tool, the existing
+human-in-the-loop gate fires. Full autonomy through a sensitive action is never a
+default; it would be a deliberate per-tool decision.
+
+LLM hosting: local self-hosted model, always-on, co-located with the orchestrator
+on the home server. Provisional; hosting details, model choice, and the
+optional-vs-mandatory question (given ATLAS's "users run it themselves" identity)
+are deferred to agent-layer planning.
+
+**Alternatives considered:**
+- LLM baked into each tool (rejected: destroys deterministic input/output
+  contracts and pytest-ability; breaks the security gates, since "preview before
+  send" becomes "preview whatever the model decided"; multiplies the inference
+  dependency across every tool).
+- Fully autonomous agent with no human gate on sensitive actions (rejected:
+  direct conflict with Decision 2's "ATLAS never guesses" spine and the security
+  policy's confirm/PIN/dry-run design).
+
+**Reasoning:** The target behavior is a genuine autonomous agent (perceive,
+decompose, decide, use tools, multi-step). Planner-above-tools is the only
+architecture that delivers that without tearing up Decision 2 and the security
+policy. It also matches ATLAS's existing intent-router-plus-tool-runner identity:
+the LLM upgrades the top-level router rather than adding a new subsystem. This
+reinforces an existing design instinct: every tool, including the Phase 1 four,
+should stay a clean deterministic unit with a well-defined schema, because an LLM
+planner will be the thing calling them later.
+
+**Impact on Phase 1:** None. The `news` and `weather` tools remain dumb fetch
+primitives. This entry only pins the reconciliation so it isn't rediscovered later.
+
+---
+
+## Decision 20: Phase 1 HTTP Client, Providers, Teaching Depth
+**Date:** August 6, 2026
+**Status:** Decided
+
+**Decided:**
+- HTTP client: `httpx`. Chosen with the governance situation acknowledged
+  (issues/discussions closed Feb 2026; HTTPX2 stewardship split under Pydantic
+  Services). Accepted trade-off: partial loss of the GitHub-issues escape hatch,
+  in exchange for async-readiness that transfers to later phases.
+- Weather provider: Open-Meteo (keyless). News provider: key-based (exact
+  provider confirmed at wiring time). Pairing chosen deliberately to teach both
+  the no-auth and .env-credential auth paths in one phase.
+- Teaching depth for Phase 1 networking: full bottom-up, starting from sockets
+  and bytes-on-the-wire, building up to HTTP/REST. Foundation intended to
+  transfer directly to the C++ PC Agent's TCP work in Phase 2.
+
+**Reasoning:** Builder is entering networking for the first time in any language
+and asked for beginner-to-intermediate depth with nothing skipped. Bottom-up is
+the higher-upfront-cost path but avoids the shallow-mental-model failure where
+HTTP is treated as magic; it also pre-loads the Phase 2 socket work.
+
+---

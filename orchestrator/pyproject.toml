@@ -6,9 +6,11 @@ authors = [
     { name = "Vishesh Mistry", email = "vishhz.art@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = [
-    "pydantic>=2.13.0",
-]
+    dependencies = [
+        "httpx>=0.28.1",
+        "pydantic>=2.13.0",
+        "python-dotenv>=1.2.2",
+    ]
 
 [project.scripts]
 atlas = "atlas:main"
