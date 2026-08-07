@@ -335,3 +335,28 @@ the higher-upfront-cost path but avoids the shallow-mental-model failure where
 HTTP is treated as magic; it also pre-loads the Phase 2 socket work.
 
 ---
+
+## Decision 21: Config Layer (pydantic-settings, optional secrets, tool-level enforcement)
+**Date:** August 6, 2026
+**Status:** Decided
+
+**Decided:** Config is a `Settings(BaseSettings)` class from `pydantic-settings`,
+instantiated once at startup. Secret fields (e.g. NEWS_API_KEY) are OPTIONAL at
+the config layer (`str | None`), so ATLAS boots without them. Each tool that
+needs a credential asserts its own key at tool load/registration and fails fast
+with a specific message ("news tool disabled: NEWS_API_KEY not set in .env") if
+absent. Config validation (type/required) still fails fast at startup for any
+genuinely required field.
+
+**Alternatives considered:**
+- News key required at config layer (rejected: hard-blocks weather-only/clone
+  users from booting ATLAS at all; contradicts "users run it themselves"
+  identity).
+- Plain os.getenv module-level (rejected: no typing, no validation, no
+  fail-fast; earlier Shape A).
+
+**Reasoning:** Optional-at-config + enforce-at-tool gives fail-fast clarity at
+the tool boundary without collateral app-wide lockout. Matches tool-independence
+principle: a tool owns its own credential requirement.
+
+---
