@@ -2,65 +2,64 @@
 
 ## You Are Here
 **Phase:** 1 (Real Local + Networked Tools) — IN PROGRESS
-**Current step:** Step 2 complete (config.py). Next: Step 3 (real calculate — safe eval).
+**Current step:** Step 3 core complete (calc_engine.py — safe evaluator). Next:
+wire calc_engine into calculate.py (the Tool), incl. rounding feature.
 
 ## Completed Phases
-- **Phase 0 (COMPLETE):** Repo structure, `cmd`-based typed REPL, tool registry
-  + Pydantic schemas, logging, three stub tools (`calculate`, `open_url`,
-  `open_app`). Runs via `uv run atlas`. Full tree passes `mypy .`, `ruff check .`,
-  `pytest` (3 tests). Committed to `main`.
+- **Phase 0 (COMPLETE):** Repo, typed REPL, registry + Pydantic schemas, logging,
+  three stub tools. `uv run atlas` verified. Tree-green (mypy, ruff, pytest x3).
 
 ## Phase 1 Progress
-- **Plan:** Approved. Four information tools: `calculate` (real safe eval),
-  `time` (local), `weather` (HTTP, keyless), `news` (HTTP, key-based).
-  `open_url`/`open_app` remain stubs — PC Agent actions, deferred to Phase 2.
-- **Step 1 (COMPLETE):** Added `httpx` + `python-dotenv` via uv. Created `.env`
-  (git-ignored, verified via `git check-ignore`), `.env.example` (committed).
-- **Step 2 (COMPLETE):** `config.py` written. `Settings(BaseSettings)` from
-  pydantic-settings, reads `.env` via `SettingsConfigDict(env_file=...)` anchored
-  with pathlib (`Path(__file__).parents[2]`). `news_api_key: str | None = None`
-  (optional at config layer, per D21). Verified: reads real value when present,
-  falls back to None when absent, no crash. Added `pydantic-settings` dependency.
-  Full tree green (ruff, mypy 12 files, pytest 3).
-- **Steps 3–12:** Pending. Next is Step 3 (real `calculate`: safe expression
-  evaluation, no `eval`).
+- **Plan:** Approved. Four info tools: calculate, time, weather (keyless HTTP),
+  news (key HTTP). open_url/open_app stay stubs → PC Agent, Phase 2.
+- **Step 1 (COMPLETE):** httpx + python-dotenv added; .env (git-ignored, verified)
+  + .env.example.
+- **Step 2 (COMPLETE):** config.py — Settings(BaseSettings), pathlib-anchored .env,
+  news_api_key optional (D21). Added pydantic-settings.
+- **Step 3 core (COMPLETE):** calc_engine.py — safe AST-based scalar evaluator.
+  Handles Constant, BinOp (+ - * / // % **), UnaryOp (neg/pos), Call (whitelisted
+  math functions). Security model: whitelist-by-construction, single else-refusal.
+  Verified: __import__/foo() refused (don't execute); nested args recurse;
+  div-by-zero rewrapped. Single CalculatorError contract. Full precision preserved
+  (rounding deferred to tool layer). Tree-green (ruff, mypy).
+- **Step 3 remaining:** wire calc_engine → calculate.py (Pydantic input schema,
+  try/except CalculatorError, logging, 4-dp rounding w/ on-off toggle via config).
+- **Steps 4–12:** Pending (time, HTTP teaching, weather, news, cleanup, tests).
 
 ## Key Decisions (recent)
-- **D21:** Config = pydantic-settings `Settings` class. Secret fields optional at
-  config layer (str | None), so ATLAS boots without them. Tools assert their own
-  credentials and fail-fast with a specific message at the tool boundary.
-- **D20:** HTTP client = `httpx`. Providers = Open-Meteo (keyless weather) +
-  key-based news. Networking taught full bottom-up from sockets, deferred to Step 6.
-- **D19:** Agents = LLM planner layer above deterministic tool registry. Autonomy
-  scoped by security policy. LLM hosting provisional: local, always-on, co-located.
+- **D25:** reST/Sphinx docstrings (no :type:/:rtype:; types in signatures). Standing
+  doc rule: code carries docstrings as written; link official docs on new APIs.
+- **D24:** v1 scope + NFC placement (NFC in v1, built in voice/Pi phase). Beta =
+  internal. Advanced-calc + vision = post-beta "future vision" on site.
+- **D23:** Deferred capstone caps parked (NFC wake, voice output, vision).
+- **D22:** calculate scalar now, powerful later (vector/symbolic via libs/LLM).
+- **D21:** Config secrets optional at config layer, enforced at tool boundary.
 
 ## File Tree (abbreviated)
 
-Atlas/
-├── DECISIONS.md
-├── PROJECT_STATE.md
-└── orchestrator/
-├── .env # git-ignored (placeholder news key)
-├── .env.example # committed template
-├── .gitignore # ignores .env, *.key
-├── pyproject.toml # httpx, python-dotenv, pydantic-settings
-├── uv.lock
-├── config/allowlist.toml
-├── src/atlas/
-│ ├── config.py # NEW: Settings(BaseSettings), pathlib-anchored .env
-│ ├── tools/ # calculate, open_url, open_app (stubs)
-│ ├── registry.py
-│ └── repl.py
-└── tests/
-├── test_registry.py
-└── test_tools.py
+orchestrator/src/atlas/
+├── config.py # Settings(BaseSettings)
+└── tools/
+├── base.py # Tool base (stays at root)
+├── calculator/
+│ ├── init.py
+│ ├── calculate.py # Tool wrapper (NEXT: wire engine in)
+│ └── calc_engine.py # DONE: safe evaluator
+├── url_launcher/
+│ ├── init.py
+│ └── url_launcher.py # stub
+└── app_launcher/
+├── init.py
+└── app_launcher.py # stub
+
+(Tools refactored to package-per-tool: folder + __init__.py each, base.py at root.)
 
 ## Known Issues / Carried Debt
-- Phase 0 carryover, folded into Phase 1 Step 11: extract shared empty-arg guard
-  helper in repl.py; unify logging style.
-- Working across two machines: laptop (E:\Projects\Atlas\) and workstation
-  (Z:\Projects\Windows\project-atlas\). Same repo, git-synced. Push before switching.
+- Phase 0 carryover → Phase 1 Step 11: shared empty-arg guard helper; unify logging.
+- Rounding (4-dp + toggle) to be built at calculate.py tool boundary, NOT engine.
+- Two machines (laptop E:\ / workstation Z:\), git-synced. Push before switching.
 
 ## Next Action
-Step 3: make `calculate` real. Safe evaluation of a math expression string WITHOUT
-`eval` (security trap — taught first). Builder chooses a safe-eval approach, then writes.
+Wire calc_engine.safe_eval into calculate.py: define Pydantic input schema, call
+safe_eval inside try/except CalculatorError, log failures, return clean result to
+user, add 4-decimal rounding with config toggle. Then register/verify via REPL.

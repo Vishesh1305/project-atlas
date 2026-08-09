@@ -350,7 +350,7 @@ genuinely required field.
 
 **Alternatives considered:**
 - News key required at config layer (rejected: hard-blocks weather-only/clone
-  users from booting ATLAS at all; contradicts "users run it themselves"
+  users from booting ATLAS at all; contradicts "users run it themselves"Yo
   identity).
 - Plain os.getenv module-level (rejected: no typing, no validation, no
   fail-fast; earlier Shape A).
@@ -360,3 +360,81 @@ the tool boundary without collateral app-wide lockout. Matches tool-independence
 principle: a tool owns its own credential requirement.
 
 ---
+
+## Decision 23: Deferred Capstone Capabilities (roadmap, not yet planned)
+**Date:** August 6, 2026
+**Status:** Parked — revisit only when ATLAS is mature and all currently-planned
+phases are achieved. No design or implementation until then.
+
+**Captured directions (builder-set):**
+1. NFC-triggered mic wake. Microphone is NOT always-on; scanning an NFC tag wakes
+   ATLAS to listen. NFC hardware acquired with the Raspberry Pi. Rationale:
+   privacy/control, explicit physical wake gesture, no passive listening.
+2. Voice output (TTS). ATLAS speaks results back, enabling screen-independent use
+   (e.g. "what is 10+10" -> spoken "twenty"). Reinforces the clean/structured/
+   speakable tool-output constraint.
+3. Vision ("eyes"). ATLAS connects to cameras to see and interpret the physical
+   world (e.g. identify a circuit board held up to the camera, explain it, answer
+   by voice), using a multimodal LLM plus research ability. Capstone-tier;
+   depends on LLM planner + voice output. (Ref: huwprosser Jarvis example in
+   ATLAS_Discussion.md.)
+
+**Reasoning:** These define ATLAS's end-state vision (voice-first, screen-optional,
+multimodal assistant). Recorded now so the vision is on the record and current
+phases can be built with it in mind, without pulling any of it into present scope.
+
+---
+
+## Decision 24: v1 Scope Boundary + NFC Placement
+**Date:** August 6, 2026
+**Status:** Decided (builder-set)
+
+**Decided:**
+- v1 (first PUBLIC release) includes: the four Phase-1 tools, C++ PC Agent, LLM
+  planner, all four agents (Plutus, Poseidon, Athena, Zeus), voice input+output,
+  and NFC-triggered mic wake. NFC is IN v1 (privacy-critical, non-negotiable).
+- Beta = internal-only pre-agent build (just the builder). Public advertising +
+  ATLAS website begin at beta. Advanced-calculate (D22) and vision (D23) are
+  published as "future vision" on the site, discussed in depth at that milestone,
+  NOT built for v1.
+- NFC wake is built during the voice/Pi hardware phase (same milestone as the
+  Pi purchase: typed workflow stable, PC Agent reliable), NOT squeezed into
+  Phase 1, because it is hardware-gated. It remains a v1 requirement, not a
+  post-v1 add-on.
+
+**Reasoning:** Keeps hardware-dependent work out of the current Python-only
+phases while guaranteeing NFC lands before public release. Existing macro roadmap
+stands; only tweak is recording NFC as a v1-required item in the voice/Pi phase.
+Per-tool roadmaps (calculate, NFC, vision, etc.) designed at the start of each
+tool's build, not now.
+
+---
+
+## Decision 25: Docstring Convention (reST/Sphinx style)
+**Date:** August 6, 2026
+**Status:** Decided
+
+**Decided:** ATLAS uses reStructuredText/Sphinx-style docstrings project-wide.
+Format: :param:, :returns:, :raises:. Type information is NOT duplicated in the
+docstring (no :type:/:rtype:); types live in the function signature via type
+hints, which are authoritative (mypy reads them). Docstrings document intent and
+behavior; signatures document types.
+
+Standing rule (added to project instructions): all code written from this point
+carries appropriate documentation — reST docstrings on functions/classes, plus
+inline comments explaining WHY for non-obvious or security-critical code. When a
+new API/library is introduced, official docs are linked alongside the explanation.
+
+**Alternatives considered:**
+- NumPy style (rejected: builder preferred reST's compactness; reST is
+  Sphinx-native and faster to write).
+- Blend of reST + NumPy (rejected: they are distinct machine-parseable formats;
+  blending breaks doc tooling and IDE rendering).
+- Google style (rejected earlier in favor of the two type-explicit styles).
+
+**Reasoning:** reST is compact, fast to write, and Sphinx-native for future
+generated docs. Dropping :type:/:rtype: avoids type info drifting out of sync
+with the actual hints.
+
+---
+
