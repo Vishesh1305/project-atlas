@@ -2,8 +2,7 @@
 
 ## You Are Here
 **Phase:** 1 (Real Local + Networked Tools) — IN PROGRESS
-**Current step:** Step 3 core complete (calc_engine.py — safe evaluator). Next:
-wire calc_engine into calculate.py (the Tool), incl. rounding feature.
+**Current step:** Step 3 COMPLETE (calculate tool fully wired). Next: Step 4 (time tool).
 
 ## Completed Phases
 - **Phase 0 (COMPLETE):** Repo, typed REPL, registry + Pydantic schemas, logging,
@@ -12,54 +11,50 @@ wire calc_engine into calculate.py (the Tool), incl. rounding feature.
 ## Phase 1 Progress
 - **Plan:** Approved. Four info tools: calculate, time, weather (keyless HTTP),
   news (key HTTP). open_url/open_app stay stubs → PC Agent, Phase 2.
-- **Step 1 (COMPLETE):** httpx + python-dotenv added; .env (git-ignored, verified)
-  + .env.example.
+- **Step 1 (COMPLETE):** httpx + python-dotenv; .env (git-ignored) + .env.example.
 - **Step 2 (COMPLETE):** config.py — Settings(BaseSettings), pathlib-anchored .env,
   news_api_key optional (D21). Added pydantic-settings.
-- **Step 3 core (COMPLETE):** calc_engine.py — safe AST-based scalar evaluator.
-  Handles Constant, BinOp (+ - * / // % **), UnaryOp (neg/pos), Call (whitelisted
-  math functions). Security model: whitelist-by-construction, single else-refusal.
-  Verified: __import__/foo() refused (don't execute); nested args recurse;
-  div-by-zero rewrapped. Single CalculatorError contract. Full precision preserved
-  (rounding deferred to tool layer). Tree-green (ruff, mypy).
-- **Step 3 remaining:** wire calc_engine → calculate.py (Pydantic input schema,
-  try/except CalculatorError, logging, 4-dp rounding w/ on-off toggle via config).
+- **Step 3 (COMPLETE):** calculate tool fully working.
+  - calc_engine.py: safe AST evaluator (Constant, BinOp, UnaryOp, whitelisted Call).
+    Whitelist-by-construction security; single CalculatorError contract; div-by-zero
+    and domain errors rewrapped. Full precision preserved.
+  - calculate.py: wraps engine. Validates via base, calls safe_eval in try/except
+    CalculatorError, returns clean user message on failure (no traceback leaks),
+    lazy %s logging.
+  - Config-driven rounding: calc_round (bool) + calc_decimals (int) fields on
+    Settings. Toggle verified live via .env (CALC_ROUND=false → full precision).
+  - Tree-green (ruff, mypy 16 files).
 - **Steps 4–12:** Pending (time, HTTP teaching, weather, news, cleanup, tests).
 
 ## Key Decisions (recent)
-- **D25:** reST/Sphinx docstrings (no :type:/:rtype:; types in signatures). Standing
-  doc rule: code carries docstrings as written; link official docs on new APIs.
-- **D24:** v1 scope + NFC placement (NFC in v1, built in voice/Pi phase). Beta =
-  internal. Advanced-calc + vision = post-beta "future vision" on site.
-- **D23:** Deferred capstone caps parked (NFC wake, voice output, vision).
-- **D22:** calculate scalar now, powerful later (vector/symbolic via libs/LLM).
+- **D25:** reST docstrings (no :type:/:rtype:). Standing doc rule + link official docs.
+- **D24:** v1 scope + NFC placement. Beta internal. Advanced-calc/vision post-beta.
+- **D23:** Deferred capstone caps parked (NFC, voice output, vision).
+- **D22:** calculate scalar now, powerful later.
 - **D21:** Config secrets optional at config layer, enforced at tool boundary.
 
 ## File Tree (abbreviated)
 
-orchestrator/src/atlas/
-├── config.py # Settings(BaseSettings)
+orchestrator/
+├── config/allowlist.toml
+└── src/atlas/
+├── config.py # Settings: news_api_key, calc_round, calc_decimals
+├── repl.py # do_calculate wired to real tool
 └── tools/
-├── base.py # Tool base (stays at root)
+├── base.py # Tool base (root)
 ├── calculator/
 │ ├── init.py
-│ ├── calculate.py # Tool wrapper (NEXT: wire engine in)
-│ └── calc_engine.py # DONE: safe evaluator
-├── url_launcher/
-│ ├── init.py
-│ └── url_launcher.py # stub
-└── app_launcher/
-├── init.py
-└── app_launcher.py # stub
-
-(Tools refactored to package-per-tool: folder + __init__.py each, base.py at root.)
+│ ├── calculate.py # DONE: wraps engine, config rounding
+│ └── calc_engine.py# DONE: safe evaluator
+├── url_launcher/ # stub
+└── app_launcher/ # stub
 
 ## Known Issues / Carried Debt
-- Phase 0 carryover → Phase 1 Step 11: shared empty-arg guard helper; unify logging.
-- Rounding (4-dp + toggle) to be built at calculate.py tool boundary, NOT engine.
+- Phase 0 carryover → Step 11: shared empty-arg guard helper (do_calculate/
+  do_open_app/do_open_url all duplicate the not-arg check); unify logging style
+  (mostly done — verify no f-string logs remain).
 - Two machines (laptop E:\ / workstation Z:\), git-synced. Push before switching.
 
 ## Next Action
-Wire calc_engine.safe_eval into calculate.py: define Pydantic input schema, call
-safe_eval inside try/except CalculatorError, log failures, return clean result to
-user, add 4-decimal rounding with config toggle. Then register/verify via REPL.
+Step 4: build the `time` tool. Simplest real tool — near-empty input, local-only,
+no HTTP. Teaches the minimal-input Pydantic case. Then register + wire do_time.

@@ -1,8 +1,8 @@
 from atlas.logging_config import setup_logging
 from atlas.registry import ToolRegistry
 from atlas.repl import AtlasRepl
-from atlas.tools.calculator.calculate import CalculateTool
 from atlas.tools.app_launcher.open_app import OpenAppTool
+from atlas.tools.calculator.calculate import CalculateTool
 from atlas.tools.url_launcher.open_url import OpenUrlTool
 
 
