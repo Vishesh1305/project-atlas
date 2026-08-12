@@ -2,59 +2,58 @@
 
 ## You Are Here
 **Phase:** 1 (Real Local + Networked Tools) — IN PROGRESS
-**Current step:** Step 3 COMPLETE (calculate tool fully wired). Next: Step 4 (time tool).
+**Current step:** Steps 4 & 5 COMPLETE (clock tool built + wired). Next: Step 6
+(HTTP teaching block — networking from fundamentals, no code).
 
 ## Completed Phases
 - **Phase 0 (COMPLETE):** Repo, typed REPL, registry + Pydantic schemas, logging,
-  three stub tools. `uv run atlas` verified. Tree-green (mypy, ruff, pytest x3).
+  three stub tools. Tree-green.
 
 ## Phase 1 Progress
-- **Plan:** Approved. Four info tools: calculate, time, weather (keyless HTTP),
+- **Plan:** Approved. Four info tools: calculate, clock, weather (keyless HTTP),
   news (key HTTP). open_url/open_app stay stubs → PC Agent, Phase 2.
-- **Step 1 (COMPLETE):** httpx + python-dotenv; .env (git-ignored) + .env.example.
-- **Step 2 (COMPLETE):** config.py — Settings(BaseSettings), pathlib-anchored .env,
-  news_api_key optional (D21). Added pydantic-settings.
-- **Step 3 (COMPLETE):** calculate tool fully working.
-  - calc_engine.py: safe AST evaluator (Constant, BinOp, UnaryOp, whitelisted Call).
-    Whitelist-by-construction security; single CalculatorError contract; div-by-zero
-    and domain errors rewrapped. Full precision preserved.
-  - calculate.py: wraps engine. Validates via base, calls safe_eval in try/except
-    CalculatorError, returns clean user message on failure (no traceback leaks),
-    lazy %s logging.
-  - Config-driven rounding: calc_round (bool) + calc_decimals (int) fields on
-    Settings. Toggle verified live via .env (CALC_ROUND=false → full precision).
-  - Tree-green (ruff, mypy 16 files).
-- **Steps 4–12:** Pending (time, HTTP teaching, weather, news, cleanup, tests).
+- **Step 1 (COMPLETE):** httpx + python-dotenv; .env + .env.example.
+- **Step 2 (COMPLETE):** config.py — Settings(BaseSettings), pathlib-anchored .env.
+- **Step 3 (COMPLETE):** calculate tool — safe AST evaluator + config rounding.
+- **Steps 4 & 5 (COMPLETE):** clock tool.
+  - Package tools/hourglass/ (folder avoids time.py stdlib collision); command
+    name "clock".
+  - Empty-input pattern: ClockInput(BaseModel) with no fields; run({}) validates.
+  - _execute formats datetime.now() → "Tue 11th Aug 2026, 09:48 PM" (ordinal
+    suffix via _suffix helper). sensitivity "none".
+  - Registered in composition root; do_clock wired in repl.py. Verified live via
+    `uv run atlas`. Note: clock accepts empty arg (unlike calculate) — relevant
+    for Step 11 guard-helper extraction.
+- **Steps 6–12:** Pending (HTTP teaching, weather, news, register/wire, error
+  handling, cleanup, tests).
 
 ## Key Decisions (recent)
-- **D25:** reST docstrings (no :type:/:rtype:). Standing doc rule + link official docs.
-- **D24:** v1 scope + NFC placement. Beta internal. Advanced-calc/vision post-beta.
-- **D23:** Deferred capstone caps parked (NFC, voice output, vision).
+- **D26:** clock tool local-time only; timezones deferred (planner does cross-zone
+  analysis on top of tool, per D19).
+- **D25:** reST docstrings (no :type:/:rtype:). Standing doc rule.
+- **D24:** v1 scope + NFC placement.
 - **D22:** calculate scalar now, powerful later.
 - **D21:** Config secrets optional at config layer, enforced at tool boundary.
 
 ## File Tree (abbreviated)
 
-orchestrator/
-├── config/allowlist.toml
-└── src/atlas/
-├── config.py # Settings: news_api_key, calc_round, calc_decimals
-├── repl.py # do_calculate wired to real tool
+orchestrator/src/atlas/
+├── config.py
+├── repl.py # do_calculate, do_clock, do_open_app, do_open_url
 └── tools/
-├── base.py # Tool base (root)
-├── calculator/
-│ ├── init.py
-│ ├── calculate.py # DONE: wraps engine, config rounding
-│ └── calc_engine.py# DONE: safe evaluator
+├── base.py
+├── calculator/ # calculate.py + calc_engine.py (DONE)
+├── hourglass/ # clock.py (DONE) — command name "clock"
 ├── url_launcher/ # stub
 └── app_launcher/ # stub
 
 ## Known Issues / Carried Debt
-- Phase 0 carryover → Step 11: shared empty-arg guard helper (do_calculate/
-  do_open_app/do_open_url all duplicate the not-arg check); unify logging style
-  (mostly done — verify no f-string logs remain).
+- Phase 0 carryover → Step 11: shared empty-arg guard helper. NOTE: clock breaks
+  the "all commands reject empty arg" assumption — helper can't be blindly applied.
+  Also unify logging style.
 - Two machines (laptop E:\ / workstation Z:\), git-synced. Push before switching.
 
 ## Next Action
-Step 4: build the `time` tool. Simplest real tool — near-empty input, local-only,
-no HTTP. Teaches the minimal-input Pydantic case. Then register + wire do_time.
+Step 6: HTTP teaching block. NO code — networking from fundamentals (sockets, bytes
+on the wire, up to HTTP request/response, status codes, JSON). Bottom-up per D20.
+Prepares for Step 7 (weather, first real HTTP call).

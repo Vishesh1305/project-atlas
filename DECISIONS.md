@@ -438,3 +438,17 @@ with the actual hints.
 
 ---
 
+## Decision 26: time Tool Scope (local now, timezones later)
+**Date:** August 11, 2026
+**Status:** Decided
+
+**Decided:** Phase 1 `time` tool returns current LOCAL time only, no input.
+Timezone support (e.g. "time in India", cross-zone difference) deferred to a
+later enhancement. When added, the tool returns deterministic times for named
+zones (via zoneinfo); cross-zone analysis ("how many hours difference") is the
+LLM planner's job on top of the tool, not the tool's. Consistent with D19
+(planner above deterministic tools).
+
+**Reasoning:** Keeps Step 4 focused on the minimal-input tool pattern without
+dragging in zoneinfo, zone-name validation, and error handling. Timezone
+reasoning is a natural agent-layer capability once the LLM planner exists.

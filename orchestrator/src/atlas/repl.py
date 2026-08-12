@@ -48,6 +48,12 @@ class AtlasRepl(cmd.Cmd):
         result = open_url.run({"url": arg})
         print(result)
 
+    def do_clock(self, arg: str) -> None:
+        clock_tool = self.registry.retrieve("clock")
+        assert clock_tool is not None
+        result = clock_tool.run({})
+        print(result)
+
     def do_quit(self, arg: str) -> bool:
         """Quits the application"""
         print("Exiting the repl loop...")
