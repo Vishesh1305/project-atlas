@@ -59,5 +59,21 @@ class AtlasRepl(cmd.Cmd):
         print("Exiting the repl loop...")
         return True
 
+    def do_weather(self, arg: str) -> None:
+        """Prints weather data"""
+        if not arg:
+            print(
+                f"Invalid Expression input in = {arg}. Make sure you are not leaving "
+                f" any unnecessary whitespaces and also the Lat Lon are correct")
+            return
+        weather_tool = self.registry.retrieve("weather")
+        assert weather_tool is not None
+        argument = arg.split()
+        if len(argument) != 2:
+            print(f"Expected 2 arguments, got {len(argument)}")
+            return
+        result = weather_tool.run({"latitude": argument[0], "longitude": argument[1]})
+        print(result)
+
     def emptyline(self) -> bool:
         return False
