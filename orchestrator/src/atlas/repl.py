@@ -1,6 +1,7 @@
 import cmd
 
 from atlas.registry import ToolRegistry
+from atlas.tools.weather.geocode import geocode
 
 
 class AtlasRepl(cmd.Cmd):
@@ -62,17 +63,26 @@ class AtlasRepl(cmd.Cmd):
     def do_weather(self, arg: str) -> None:
         """Prints weather data"""
         if not arg:
-            print(
-                f"Invalid Expression input in = {arg}. Make sure you are not leaving "
-                f" any unnecessary whitespaces and also the Lat Lon are correct")
+            print("No place name given. Type a place, e.g. 'weather Vancouver'.")
+            return
+        place = geocode(arg)
+        if place is None:
+            print("No such place")
             return
         weather_tool = self.registry.retrieve("weather")
         assert weather_tool is not None
-        argument = arg.split()
-        if len(argument) != 2:
-            print(f"Expected 2 arguments, got {len(argument)}")
-            return
-        result = weather_tool.run({"latitude": argument[0], "longitude": argument[1]})
+        result = weather_tool.run({"latitude" : place.latitude, "longitude" : place.longitude})
+
+        parts = []
+        if place.name:
+            parts.append(place.name)
+        if place.admin1:
+            parts.append(place.admin1)
+        if place.country:
+            parts.append(place.country)
+        location = ", ".join(parts)
+        print(f"Weather data of: {location}")
+        print(f"Latitude: {place.latitude}, Longitude: {place.longitude}")
         print(result)
 
     def emptyline(self) -> bool:
