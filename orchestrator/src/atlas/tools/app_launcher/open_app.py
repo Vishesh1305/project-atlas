@@ -7,15 +7,18 @@ from pydantic import BaseModel
 from atlas.tools.base import Tool
 
 logger = logging.getLogger(__name__)
+
+
 class OpenAppInput(BaseModel):
-    app_name : str
+    app_name: str
+
 
 class OpenAppTool(Tool):
     def __init__(self) -> None:
         super().__init__()
         toml_path = Path(__file__).parents[4] / "config" / "allowlist.toml"
         with open(toml_path, "rb") as f:
-            self._allowlist = tomllib.load(f)['apps']
+            self._allowlist = tomllib.load(f)["apps"]
 
     @property
     def name(self) -> str:

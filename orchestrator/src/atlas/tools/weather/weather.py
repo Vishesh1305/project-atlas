@@ -5,9 +5,9 @@ from atlas.tools.base import Tool
 
 
 class WeatherInput(BaseModel):
-
     latitude: float = Field(ge=-90, le=90)
-    longitude: float= Field(ge=-180, le=180)
+    longitude: float = Field(ge=-180, le=180)
+
 
 class WeatherTool(Tool):
     @property
@@ -33,13 +33,14 @@ class WeatherTool(Tool):
         params: dict[str, str | float] = {
             "latitude": validated_input.latitude,
             "longitude": validated_input.longitude,
-            "current" : "temperature_2m,relative_humidity_2m",
+            "current": "temperature_2m,relative_humidity_2m",
         }
 
         response = httpx.get(url, params=params)
         result = response.json()
-        return (f"Temperature: {result['current']['temperature_2m']}"
-                f"{result['current_units']['temperature_2m']}\n"
-
-                f"Relative Humidity: {result['current']['relative_humidity_2m']}"
-                f"{result['current_units']['relative_humidity_2m']}")
+        return (
+            f"Temperature: {result['current']['temperature_2m']}"
+            f"{result['current_units']['temperature_2m']}\n"
+            f"Relative Humidity: {result['current']['relative_humidity_2m']}"
+            f"{result['current_units']['relative_humidity_2m']}"
+        )

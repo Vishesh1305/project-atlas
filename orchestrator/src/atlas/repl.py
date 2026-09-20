@@ -17,7 +17,8 @@ class AtlasRepl(cmd.Cmd):
         if not arg:
             print(
                 f"Invalid Expression input in: {arg}. Make sure you are not leaving any "
-                f" unnecessary whitespaces")
+                f" unnecessary whitespaces"
+            )
             return
         calculate_tool = self.registry.retrieve("calculate")
         assert calculate_tool is not None
@@ -29,7 +30,8 @@ class AtlasRepl(cmd.Cmd):
         if not arg:
             print(
                 f"Invalid Expression input in = {arg}. Make sure you are not leaving "
-                f" any unnecessary whitespaces")
+                f" any unnecessary whitespaces"
+            )
             return
         open_tool = self.registry.retrieve("open_app")
         assert open_tool is not None
@@ -42,7 +44,7 @@ class AtlasRepl(cmd.Cmd):
             print(
                 f"Invalid URL input in = {arg}. Make sure you are not leaving any unnecessary"
                 f" whitespaces and also the URL is correct"
-                )
+            )
             return
         open_url = self.registry.retrieve("open_url")
         assert open_url is not None
@@ -71,7 +73,7 @@ class AtlasRepl(cmd.Cmd):
             return
         weather_tool = self.registry.retrieve("weather")
         assert weather_tool is not None
-        result = weather_tool.run({"latitude" : place.latitude, "longitude" : place.longitude})
+        result = weather_tool.run({"latitude": place.latitude, "longitude": place.longitude})
 
         parts = []
         if place.name:
@@ -83,6 +85,27 @@ class AtlasRepl(cmd.Cmd):
         location = ", ".join(parts)
         print(f"Weather data of: {location}")
         print(f"Latitude: {place.latitude}, Longitude: {place.longitude}")
+        print(result)
+
+    def do_news(self, arg: str) -> None:
+        """Search recent news headlines by topic.
+
+        Usage: news <topic>
+
+        :param arg: the whole argument string, treated as a single topic.
+        """
+        if not arg:
+            print("No topic given. Type a topic, e.g. 'news formula 1'.")
+            return
+
+        topic = arg
+
+        tool = self.registry.retrieve("gnews")
+        if tool is None:
+            print("News tool is not registered.")
+            return
+
+        result = tool.run({"topic": topic})
         print(result)
 
     def emptyline(self) -> bool:

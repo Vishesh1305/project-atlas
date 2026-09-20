@@ -452,3 +452,85 @@ LLM planner's job on top of the tool, not the tool's. Consistent with D19
 **Reasoning:** Keeps Step 4 focused on the minimal-input tool pattern without
 dragging in zoneinfo, zone-name validation, and error handling. Timezone
 reasoning is a natural agent-layer capability once the LLM planner exists.
+
+---
+
+## D31 — Secret redaction at the logging layer (2026-09-20)
+
+**Context:** GNews carries credentials as a query parameter, so every httpx
+INFO request line contains the key. It appeared in terminal scrollback and was
+written to `atlas.log` by the DEBUG file handler. It also leaked into two chat
+pastes during development, which is the evidence that manual redaction does not
+work as a practice.
+
+**Decided:** A `RedactSecrets(logging.Filter)` in `logging_config.py`,
+initialised from the shared `Settings` instance, attached to BOTH handlers.
+Replaces any known secret value with `***REDACTED***`.
+
+**Rejected: silencing the httpx logger** (setting it to WARNING). Would have
+removed the request line entirely. That line caught both Step 7 Part 1 bugs and
+is the primary debugging tool for wire-level work, so discarding it to solve a
+redaction problem is the wrong trade.
+
+**Rejected: keeping the key out of the URL.** Not available. GNews requires
+query-param auth.
+
+**Two implementation facts worth recording:**
+1. The filter is attached to HANDLERS, not to the root logger. `callHandlers`
+   walks ancestor loggers invoking their handlers, NOT their filters. A filter
+   on root would never see a record originating from the `httpx` logger.
+2. httpx logs with lazy `%`-style formatting, so the URL is in `record.args`,
+   not `record.msg`. Mutating `msg` alone does nothing. The filter handles
+   both, and converts args via `str()` because httpx passes an `httpx.URL`
+   object rather than a string.
+
+**Design property:** the secret is read from settings, not hardcoded, so key
+rotation requires no filter change. The constructor takes an iterable, so a
+second keyed provider is one more list entry rather than a second mechanism.
+
+---
+
+## D32 — Single shared Settings instance (2026-09-20)
+
+**Decided:** `Settings()` is constructed exactly once, at module level in
+`config.py`. Every module imports that instance. No module constructs its own.
+
+**Trigger:** `gnews.py` was building `configurations = Settings()`, producing a
+second independent instance. The redaction filter was initialised from
+`config.py`'s instance while the tool read its own. They agreed only by
+coincidence, and a divergence would have meant the filter redacting a string
+the tool was not sending, leaking the key silently.
+
+**Applied project-wide**, not just to `gnews.py`.
+
+
+## D33 — Validation strictness is project-wide, via model config (2026-09-20)
+
+**Decided:** input models set `model_config = ConfigDict(strict=True,
+str_strip_whitespace=True)` at the class level rather than repeating
+constraints per field.
+
+**Reasoning:** per-field `strict=True` produced an asymmetry (strict `topic`,
+coercive `count`) that reads as accidental. Class-level config applies to
+fields added later and scales to the models still to come (canonical
+`Article`, `GdeltInput`).
+
+**Verified behaviour**, previously assumed without evidence:
+- `str_strip_whitespace` DOES fire under `strict=True`. Stripping transforms a
+  value that is already a valid `str`; strict mode governs coercion. They
+  compose.
+- Config-level `strict` reaches every field, confirmed with `count="5"`
+  raising rather than coercing.
+
+**Note:** on the REPL path, `cmd.Cmd` strips the argument before `do_news` sees
+it, so `str_strip_whitespace` currently never fires there. It still earns its
+place because the D19 planner will call `.run()` directly, bypassing `cmd`.
+
+---
+
+## D29 amendment (2026-09-20)
+
+GNews free-tier delay is CONFIRMED at 12 hours, reported by the API itself in
+`information.realTimeArticles` on every response. This resolves the conflicting
+third-party reports noted when D29 was written. Consequence: GNews cannot serve
+a real-time feed, which strengthens the case for GDELT as the volume source.

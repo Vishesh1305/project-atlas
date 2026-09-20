@@ -2,13 +2,12 @@ import logging
 
 from pydantic import BaseModel
 
-from atlas.config import Settings
+from atlas.config import settings
 from atlas.tools.base import Tool
 
 from .calc_engine import CalculatorError, safe_eval
 
 logger = logging.getLogger(__name__)
-configurations = Settings()
 
 class CalculateInput(BaseModel):
     expression: str
@@ -35,9 +34,9 @@ class CalculateTool(Tool):
         assert isinstance(validated_input, CalculateInput)
         logger.info("calculate evaluating: %s", validated_input.expression)
         try:
-            if configurations.calc_round:
+            if settings.calc_round:
                 result = safe_eval(validated_input.expression)
-                round_result = round(result, configurations.calc_decimal_precision)
+                round_result = round(result, settings.calc_decimal_precision)
                 return str(round_result)
             else:
                 result = safe_eval(validated_input.expression)
