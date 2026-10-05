@@ -4,9 +4,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 1: Language Split  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 1: Language Split
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:** Python orchestrator + C++ PC Agent, communicating over a custom local protocol (TCP socket or named pipe exact transport TBD in Phase 2). Phase 0 stays Python-only; the C++ PC Agent enters in Phase 1 or 2 after the Python side is stable.
 
@@ -18,9 +18,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 2: Python Framework  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 2: Python Framework
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:** Python's stdlib `cmd` module for the REPL loop + Pydantic for input validation and tool schemas.
 
@@ -32,9 +32,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 3: Project Structure  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 3: Project Structure
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:** Single monorepo with three top-level component folders: `orchestrator/` (Python), `pc_agent/` (C++, deferred to Phase 1/2), and `shared/` (protocol spec, shared schemas, cross-component contracts). Plus standard top-level files: `docs/`, `DECISIONS.md`, `PROJECT_STATE.md`, `README.md`.
 
@@ -46,9 +46,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 4: Dev Environment (Python tooling + IDE)  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 4: Dev Environment (Python tooling + IDE)
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:**
 - **Python tooling:** Ruff (linter + formatter) + mypy (type checker), both integrated into PyCharm via official plugins, configured to run on save.
@@ -64,9 +64,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 5: Testing Framework  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 5: Testing Framework
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:** pytest as the testing framework. Tests live in `orchestrator/tests/` mirroring the source layout. Plugin ecosystem (`pytest-cov`, `pytest-mock`, `pytest-asyncio`) added when specific phases require them.
 
@@ -77,9 +77,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 6: Version Control Workflow  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 6: Version Control Workflow
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:** GitHub Flow workflow, `main` is the always-stable timeline, all new work happens on feature branches (`feature/*`, `phase/*`), branches merge into `main` only when working and tested. Phase 0 setup commits go directly to `main` as a soft on-ramp; feature-branch discipline begins once real tool code starts. `.gitignore` will be a standard Python + C++ + Windows + JetBrains + Visual Studio template, prepared in Phase 0.
 
@@ -91,9 +91,9 @@ This document records every significant architectural decision made during ATLAS
 
 ---
 
-## Decision 7: Dependency Management  
-**Date:** April 11, 2026  
-**Status:** Decided  
+## Decision 7: Dependency Management
+**Date:** April 11, 2026
+**Status:** Decided
 
 **Decided:** uv as the unified Python dependency manager, virtual environment manager, and project initialization tool. Project metadata, dependencies, and tool configs (Ruff, mypy, pytest) all consolidated in `orchestrator/pyproject.toml`. uv-managed `.venv` (gitignored). `uv.lock` committed for reproducible installs.
 
@@ -248,7 +248,7 @@ This document records every significant architectural decision made during ATLAS
 
 **Alternatives considered:**
 - 80/20 C++ by mandate across all layers (under consideration; analysis above)
-- Python-only (already rejected in Decision 1)  
+- Python-only (already rejected in Decision 1)
 - C# agent layer (already rejected in Decision 1)
 
 **Reasoning:** Language should follow the shape of the problem. Most agent work is data, web, and AI, which is Python's home turf; most infrastructure work is low-level and protocol-bound, which is C++'s. A layer-based split lets each part use the right tool and keeps the learning sequenced (one wall at a time) instead of stacking Python-ecosystem learning, heavy C++, networking and threading, and AI-without-ecosystem all at once.
@@ -338,7 +338,7 @@ HTTP is treated as magic; it also pre-loads the Phase 2 socket work.
 
 ## Decision 21: Config Layer (pydantic-settings, optional secrets, tool-level enforcement)
 **Date:** August 6, 2026
-**Status:** Decided
+**Status:** Decided (amended by D30)
 
 **Decided:** Config is a `Settings(BaseSettings)` class from `pydantic-settings`,
 instantiated once at startup. Secret fields (e.g. NEWS_API_KEY) are OPTIONAL at
@@ -350,7 +350,7 @@ genuinely required field.
 
 **Alternatives considered:**
 - News key required at config layer (rejected: hard-blocks weather-only/clone
-  users from booting ATLAS at all; contradicts "users run it themselves"Yo
+  users from booting ATLAS at all; contradicts "users run it themselves"
   identity).
 - Plain os.getenv module-level (rejected: no typing, no validation, no
   fail-fast; earlier Shape A).
@@ -358,6 +358,28 @@ genuinely required field.
 **Reasoning:** Optional-at-config + enforce-at-tool gives fail-fast clarity at
 the tool boundary without collateral app-wide lockout. Matches tool-independence
 principle: a tool owns its own credential requirement.
+
+**Amended by D30:** the "at tool load/registration" wording above is superseded.
+Enforcement happens inside `_execute`, at the tool boundary. See D30.
+
+---
+
+## Decision 22: Advanced calculate (ENTRY MISSING)
+**Date:** unknown
+**Status:** Number in use, entry absent
+
+D22 is referenced by Decision 24 ("Advanced-calculate (D22) and vision (D23) are
+published as 'future vision' on the site") but no entry for it exists in this
+file. Either it was never written or it was lost, the same way D27 and D28 were
+lost until they were backfilled on 2026-10-05.
+
+What is recoverable from the D24 reference: D22 concerns an advanced or extended
+version of the `calculate` tool, parked as future-vision material and explicitly
+NOT built for v1.
+
+TODO: reconstruct the full entry from the original discussion, or retire the
+number and amend D24's reference. Recorded so the gap is visible rather than
+looking like a numbering skip.
 
 ---
 
@@ -455,7 +477,171 @@ reasoning is a natural agent-layer capability once the LLM planner exists.
 
 ---
 
-## D31 — Secret redaction at the logging layer (2026-09-20)
+## D27 — Geocoding disambiguation: pre-qualify plus visible resolution
+**Date:** September 2026 (exact date from the Step 7 Part 2 commit)
+**Status:** Decided
+
+**Context:** `geocode()` hits the Open-Meteo geocoding search endpoint with
+`count=5` and returns a single best match. Place names are ambiguous.
+"Vancouver" is both BC and Washington State. The tool has no way to know which
+one the user meant.
+
+**Decided:** Two mechanisms, neither of them interactive.
+
+1. **User pre-qualification.** The whole argument is treated as the place name,
+   so the user can type "vancouver, united states" and let the provider's own
+   ranking disambiguate. No splitting on whitespace, no argument-count check.
+2. **Show what was resolved.** `do_weather` prints a resolved-place header
+   built from the returned `GeocodeResult` before the weather itself. Parts
+   list skips `None` fields and joins with ", ". A wrong match is therefore
+   always visible rather than silent.
+
+**Rejected: an interactive picker** ("did you mean 1, 2, or 3?"). Two reasons:
+
+- It puts conversational state in the tool layer, which fights D19. Judgment
+  and multi-turn context belong to the planner above the registry, not to a
+  deterministic tool.
+- It fights `cmd.Cmd`'s one-input-one-output model. A picker needs a second
+  prompt-and-read cycle inside a single `do_*` call.
+
+**Implementation note:** the header is built in `do_weather`, NOT inside the
+weather tool. The tool stays a pure coordinates-in unit, so Step 7 Part 1 was
+reused completely unchanged when Part 2 added geocoding. Presentation belongs
+to the REPL layer.
+
+**Verified live:** "vancouver, united states" correctly resolved to WA rather
+than BC, proving the pre-qualification path works without any tool-side logic.
+
+---
+
+## D28 — Fuzzy-match resolution belongs to the planner
+**Date:** September 2026 (exact date from the Step 7 Part 2 commit)
+**Status:** Decided
+
+**Context:** D27 makes a wrong geocoding match visible, but does not make it
+correct. Trigger case: "sevasi" resolved to Şenyuva, Türkiye. The provider
+returned a confident, plausible, wrong answer. Because of D27's header the
+error was visible, but nothing in the tool layer could have caught it.
+
+**Decided:** `geocode()` stays deterministic: best-match-or-`None`, no
+heuristics, no scoring, no second-guessing the provider. Detecting a
+wrong-but-plausible match is the future LLM planner's job.
+
+**Reasoning:** knowing that "sevasi" is more likely a locality in Gujarat than
+a village in Türkiye requires world knowledge plus conversational context
+(where the user is, what they were just talking about). That is exactly the
+class of judgment D19 assigns to the planner. Any tool-side attempt would be a
+pile of heuristics that is wrong in a different set of cases.
+
+**Consequence for the planner-era tool:** it will expose **all** `count=5`
+matches, not just `[0]`, so the planner can choose using context. `geocode()`
+already requests `count=5`; only the first result is consumed today. The data
+is already on the wire, so this is an interface change, not a new API call.
+
+**Pairing:** D27 and D28 are one decision split in two. D27 decides that wrong
+matches are made visible. D28 decides who is responsible for fixing them.
+
+---
+
+## D29 — News source strategy
+**Date:** September 10, 2026
+**Status:** Decided (amended 2026-09-20, below)
+
+**Decided:** Four-source strategy for the eventual aggregation pipeline, but
+Step 8 builds GNews only.
+
+- **GNews** — ranking and description text. Keyed (`apikey` query param).
+  Free tier: 100 req/day, 10 articles/request, ~1 req/sec, resets 00:00 UTC,
+  truncated content, development/testing only and non-commercial.
+- **GDELT** — volume source. Keyless, full-text search across 65+ languages,
+  rolling 3-month window, 8 metadata fields, no article body. Own step later.
+- **RSS** — curated third source. No key, no quota, no terms problem.
+  Coverage only as good as the hand-maintained feed list.
+- **NewsAPI.ai** — EXCLUDED as an ingestion source. See below.
+
+**Why GNews first:** Step 8's teaching purpose is the credentialed HTTP path
+(D20 pairing: weather taught keyless, news teaches auth). GDELT is keyless, so
+building it first would leave three keyless calls and zero keyed ones. GNews
+also has the simpler response shape of the two.
+
+**Why NewsAPI.ai is excluded as a source:**
+
+1. Free tier is a one-time allowance (~2,000 tokens / 30 days), not a recurring
+   quota. Sources conflict (one claims 2,000 results/day) but the vendor's own
+   SDK docs say one-time. A source that runs dry permanently is worse than no
+   source, because it passes testing and dies silently later.
+2. It already performs deduplication, event clustering, entity linking, and
+   returns full article text plus summaries. That is stages 2, 3, 6, and 7 of
+   the planned pipeline. Ingesting it means either discarding that work or
+   building a pipeline whose output is worse than one of its inputs.
+
+**Instead:** the one-time token allowance is reserved as an evaluation oracle.
+Run a fixed article batch through our clustering and through NewsAPI.ai's event
+endpoint, compare. This gives ground truth for tuning the similarity threshold,
+which is otherwise the hardest parameter in the system to pick. Recorded as
+deferred item A11.
+
+**Rate-limit consequence:** GNews at 100 req/day (4/hour) cannot be the polling
+workhorse. GDELT (paced ~1 req/5 sec, no hard documented quota) is. This is the
+functional justification for pairing them.
+
+**Alternatives considered:** Guardian Open Platform (free, production-safe,
+returns full text, but single-publisher). NewsData.io and Currents (commercial
+use permitted on free tier, but metadata only and delayed). Rejected in favour
+of the GDELT+GNews split, which covers both volume and ranking.
+
+---
+
+## D29 amendment
+**Date:** September 20, 2026
+**Status:** Amends D29
+
+GNews free-tier delay is CONFIRMED at 12 hours, reported by the API itself in
+`information.realTimeArticles` on every response. This resolves the conflicting
+third-party reports noted when D29 was written. Consequence: GNews cannot serve
+a real-time feed, which strengthens the case for GDELT as the volume source.
+
+---
+
+## D30 — Credential guard placement
+**Date:** September 10, 2026
+**Status:** Decided
+
+**Decided:** Enforce required credentials inside `_execute`, at the tool
+boundary. Missing key returns an ordinary tool output string
+("news disabled: NEWS_API_KEY not set in .env"). The tool still constructs,
+still registers, still appears as a known command. It just refuses to work.
+
+**Amends D21.** D21's wording said "asserts its own key at tool load/
+registration." That wording is superseded. Enforcement is at the tool
+boundary, not at load or registration time.
+
+**Alternatives considered:**
+
+- Raise in `__init__`. Rejected: the composition root registers
+  unconditionally, so a missing key would crash startup, contradicting D21's
+  own "ATLAS boots without them."
+- Raise in `__init__` plus conditional registration in the composition root.
+  Cleanest separation, rejected because `news` would then not be a known
+  command at all, so the user gets `*** Unknown syntax: news` instead of a
+  message explaining what is wrong.
+
+**Cost accepted:** the check runs on every call. It is a null check.
+
+**Secondary benefit:** the guard is also the mypy narrowing construct.
+`settings.news_api_key` is `str | None`; the early return proves it is `str`
+on every line after it.
+
+**Implementation note:** the guard tests falsiness (`if not key`), not
+`is None`. A `.env` line of `NEWS_API_KEY=""` yields an empty string, not
+`None`, and an identity check would let it through to the wire as `apikey=`.
+"Not configured" means falsy.
+
+---
+
+## D31 — Secret redaction at the logging layer
+**Date:** September 20, 2026
+**Status:** Decided
 
 **Context:** GNews carries credentials as a query parameter, so every httpx
 INFO request line contains the key. It appeared in terminal scrollback and was
@@ -476,6 +662,7 @@ redaction problem is the wrong trade.
 query-param auth.
 
 **Two implementation facts worth recording:**
+
 1. The filter is attached to HANDLERS, not to the root logger. `callHandlers`
    walks ancestor loggers invoking their handlers, NOT their filters. A filter
    on root would never see a record originating from the `httpx` logger.
@@ -490,7 +677,9 @@ second keyed provider is one more list entry rather than a second mechanism.
 
 ---
 
-## D32 — Single shared Settings instance (2026-09-20)
+## D32 — Single shared Settings instance
+**Date:** September 20, 2026
+**Status:** Decided
 
 **Decided:** `Settings()` is constructed exactly once, at module level in
 `config.py`. Every module imports that instance. No module constructs its own.
@@ -503,8 +692,11 @@ the tool was not sending, leaking the key silently.
 
 **Applied project-wide**, not just to `gnews.py`.
 
+---
 
-## D33 — Validation strictness is project-wide, via model config (2026-09-20)
+## D33 — Validation strictness is project-wide, via model config
+**Date:** September 20, 2026
+**Status:** Decided
 
 **Decided:** input models set `model_config = ConfigDict(strict=True,
 str_strip_whitespace=True)` at the class level rather than repeating
@@ -516,6 +708,7 @@ fields added later and scales to the models still to come (canonical
 `Article`, `GdeltInput`).
 
 **Verified behaviour**, previously assumed without evidence:
+
 - `str_strip_whitespace` DOES fire under `strict=True`. Stripping transforms a
   value that is already a valid `str`; strict mode governs coercion. They
   compose.
@@ -528,9 +721,111 @@ place because the D19 planner will call `.run()` directly, bypassing `cmd`.
 
 ---
 
-## D29 amendment (2026-09-20)
+## D34 — PC Agent is cross-platform
+**Date:** October 5, 2026
+**Status:** Decided
 
-GNews free-tier delay is CONFIRMED at 12 hours, reported by the API itself in
-`information.realTimeArticles` on every response. This resolves the conflicting
-third-party reports noted when D29 was written. Consequence: GNews cannot serve
-a real-time feed, which strengthens the case for GDELT as the volume source.
+**Decided:** The Phase 2 C++ PC Agent targets Windows, macOS, and Linux. One
+codebase, split into a portable transport layer and a platform-specific action
+layer behind a single interface.
+
+**Trigger:** the original design assumed Windows, because both dev machines
+were Windows. The main machine is now a MacBook Pro, so a Windows-only agent
+would be an agent the builder cannot run day to day.
+
+**Structure:**
+
+- **Transport layer (portable):** sockets, message framing, request/response
+  loop. Needs only a thin shim for Winsock's `SOCKET` handle type and
+  `WSAStartup`, or none at all if an abstraction like ASIO is used.
+- **Action layer (per platform):** every tool the agent performs is a platform
+  API call. A `PlatformActions` interface with `WindowsActions`,
+  `MacActions`, and `LinuxActions` implementations selected at compile time.
+
+| Action | Windows | macOS | Linux |
+|---|---|---|---|
+| Open URL | `ShellExecute` | `open` | `xdg-open` |
+| Launch app | `CreateProcess` | `open -a` | `.desktop` lookup, or exec on `$PATH` |
+| Media control | SMTC | `MPRemoteCommandCenter` | MPRIS over D-Bus |
+| Window management | Win32 HWNDs | Accessibility API (needs permission) | X11 only, see below |
+
+**Implementation order:** macOS first, because it is the machine that can be
+tested. Windows second. Linux last, and possibly incompletely.
+
+**Alternatives considered:**
+
+- macOS only (rejected: abandons the Windows machines and the original design).
+- Windows only (rejected: cannot run on the daily driver).
+- Two separate agents (rejected: duplicates the transport, which is the part
+  with the actual engineering value).
+
+**Reasoning:** the abstraction costs almost nothing if designed in from the
+start and is painful to retrofit. It also demonstrates a clean boundary between
+portable logic and platform-specific code, which is a better portfolio signal
+than either single-platform version.
+
+**Known limitation, recorded now:** Wayland deliberately blocks global window
+control as a security property. It is not a gap to work around. Any
+window-management feature on Linux is X11 only, and Wayland is the default on
+most current distributions. See DEFERRED.md.
+
+---
+
+## D35 — GUI is Tauri 2 with Rust and TypeScript
+**Date:** October 5, 2026
+**Status:** Decided (direction only; build deferred to Phase 3+)
+
+**Decided:** The eventual graphical front end is Tauri 2, with a TypeScript web
+frontend and a deliberately thin Rust shell.
+
+**Layering:**
+
+```
+TypeScript UI  ──HTTP/WebSocket──>  Python orchestrator  ──>  C++ agent
+      │
+   Tauri (Rust)
+   windowing, tray, packaging, OS integration only
+```
+
+The frontend talks to the orchestrator directly. Rust does only what a native
+shell must: the window, the system tray, auto-start, global hotkeys, packaging.
+
+**Rule:** no business logic in Rust. Logic split across Python, C++, and Rust
+would mean three places to look for any bug and three languages to keep in
+sync. The Rust layer stays small and purposeful.
+
+**Prerequisite, not optional:** an orchestrator API. Today the REPL calls tools
+in-process; a Tauri app is a separate process in a different language and
+cannot. The orchestrator must listen on a local port (HTTP plus WebSocket).
+Once it exists, the REPL becomes just another client of the API, and the
+claim that "the backend does not change" becomes literally true rather than
+approximately true. See DEFERRED.md.
+
+**Alternatives considered:**
+
+- **Flutter** (considered first, rejected): framework is production-ready for
+  desktop, but costs Dart, a fourth language serving none of the builder's
+  target roles. Its strongest argument, code sharing with a mobile app, does
+  not apply.
+- **Local web UI served by the orchestrator** (rejected as the end state, still
+  viable as a first experiment): cheapest path to a modern look, zero new
+  toolchain, but no native shell for tray, hotkeys, or packaging.
+- **Qt Quick / QML** (rejected): keeps the backend in C++ and is strong for
+  systems-role signalling, but adds QML as its own language and a heavier
+  toolchain than Tauri for the same visual result.
+
+**Reasoning:** Rust is a systems language, so the time compounds with the
+builder's goals in a way Dart does not. The web frontend gives the modern look
+without inventing a UI vocabulary. Binaries are 2 to 10 MB versus Flutter's
+30 to 80 MB because Tauri uses the system WebView.
+
+**Tooling note:** the visual layer may be generated with Claude Code or Codex
+(components, layout, styling, state wiring), consistent with the existing
+Copilot rule: single-file work and boilerplate yes, architecture and security
+boundaries no. The API contract, the local-port authentication model, and the
+confirmation-gate screens are designed deliberately, not generated. The
+confirmation screen IS the security boundary for sensitive actions.
+
+**Timing:** Phase 3 at the earliest, after Phase 2 establishes the protocol and
+after the orchestrator API exists. Building the GUI first would mean designing
+the API under UI pressure, which produces a worse API.

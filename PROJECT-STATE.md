@@ -1,15 +1,19 @@
 # PROJECT_STATE.md
 
 ## You Are Here
+
 **Phase:** 1 (Real Local + Networked Tools) — IN PROGRESS
 **Current step:** Step 8 COMPLETE (news tool, first keyed HTTP call, live and
-tree-green). Next: Step 9 (register/wire pass).
+tree-green). Documentation backfill COMPLETE (D27-D30 recovered, D34-D35 added,
+DEFERRED.md restructured). Next: Step 9 (register/wire pass).
 
 ## Completed Phases
+
 - **Phase 0 (COMPLETE):** Repo, typed REPL, registry + Pydantic schemas, logging,
   three stub tools. Tree-green.
 
 ## Phase 1 Progress
+
 - **Plan:** Approved. Four info tools: calculate, clock, weather (keyless HTTP),
   news (keyed HTTP). open_url/open_app stay stubs -> PC Agent, Phase 2.
 - **Step 1 (COMPLETE):** httpx + python-dotenv; .env + .env.example.
@@ -66,9 +70,33 @@ tree-green). Next: Step 9 (register/wire pass).
   - **Key rotated twice** during development after two accidental exposures.
     atlas.log confirmed gitignored (.gitignore:92 `*.log`) and never committed
     (`git log --all -- orchestrator/atlas.log` empty).
+- **Documentation backfill (2026-10-05, COMPLETE):**
+  - **D27 and D28 were missing entirely** from DECISIONS.md. They existed only
+    as one-liners in this file. Both reconstructed and inserted in numeric
+    order. Dates are placeholders pending the Step 7 Part 2 commit date.
+  - **D29 and D30 full entries added.** Only the D29 amendment had been
+    committed; the entries it amends were absent. The amendment was also moved
+    from after D33 to directly under D29.
+  - **D34 (cross-platform PC Agent) and D35 (Tauri 2 GUI) added.**
+  - **Decision 22 placeholder added.** The number is referenced by D24 but has
+    no entry. Recorded as a visible gap with a TODO rather than a silent skip.
+  - **D21 amended-by note and typo fix.** D21 now points forward to D30.
+  - **DEFERRED.md restructured.** Phase 2 promoted from a `###` nested under
+    Phase 1 to its own `##` section. New `## Phase 3+` section added (G0-G5).
+    Markdown fixes throughout: the D34 table and several bold paragraphs were
+    being absorbed into preceding lists and would not have rendered on GitHub.
 - **Steps 9–12:** Pending (register/wire pass, error handling, cleanup, tests).
 
 ## Key Decisions (recent)
+
+- **D35:** GUI is Tauri 2 + TypeScript, with a thin Rust shell (windowing,
+  tray, packaging only, no business logic). Flutter considered and rejected
+  (Dart serves no career goal). Hard prerequisite: an orchestrator API, since
+  the REPL currently calls tools in-process. Phase 3+ at the earliest.
+- **D34:** PC Agent is cross-platform (Windows, macOS, Linux). Portable
+  transport, platform-specific action layer behind a `PlatformActions`
+  interface. macOS implemented first. Wayland blocks global window control by
+  design, so Linux window management is X11 only.
 - **D33:** Validation strictness is project-wide via model_config, not per
   field. Verified: str_strip_whitespace DOES fire under strict=True; config
   strict reaches every field.
@@ -91,9 +119,11 @@ tree-green). Next: Step 9 (register/wire pass).
 
 ## File Tree (abbreviated)
 
-DECISIONS.md
-DEFERRED.md
+```
+DECISIONS.md       # D1-D35; D22 is a placeholder, entry missing
+DEFERRED.md        # Phase 1 steps, Phase 2, Phase 3+ (G0-G5), Athena-era (A0-A16)
 PROJECT_STATE.md
+README.md          # STALE: still says "Phase 0 in progress" (DEFERRED G5)
 orchestrator/src/atlas/
     config.py          # settings = Settings() — the ONE shared instance (D32)
     repl.py            # do_calculate, do_clock, do_weather, do_news,
@@ -108,9 +138,11 @@ orchestrator/src/atlas/
         news/          # gnews.py — command "gnews"
         url_launcher/  # stub
         app_launcher/  # stub
+```
 
 ## Known Issues / Carried Debt
-Near-term only. Design-level and Athena-era items live in DEFERRED.md.
+
+Near-term only. Design-level, Phase 2+, and Athena-era items live in DEFERRED.md.
 
 - **All three network tools have NO failure handling (deliberate, Step 10):**
   no status-code check, no RequestError guard, no timeout, no KeyError guard.
@@ -122,14 +154,30 @@ Near-term only. Design-level and Athena-era items live in DEFERRED.md.
   before Phase 1 close.
 - Phase 0 carryover -> Step 11: shared empty-arg guard helper (clock breaks the
   "all commands reject empty arg" assumption). Also unify logging style.
+- **Decision 22 has no entry.** Referenced by D24 as "advanced-calculate".
+  Either reconstruct it from the original discussion or retire the number and
+  amend D24. Placeholder block in DECISIONS.md marks the gap.
+- **D27 and D28 dates are placeholders** ("September 2026"). Replace with the
+  real dates from the Step 7 Part 2 commits.
+- **README.md is stale** (DEFERRED G5). Says Phase 0, no GUI phase in the
+  roadmap table, no mention of the cross-platform agent. Update at Phase 1
+  close so it is one edit rather than three.
 - **THREE machines now:** Windows laptop (E:\), Windows workstation (Z:\), and
   the MacBook Pro, which is now the main machine. Git-synced, push before
   switching. `.env` is gitignored and does NOT sync: a fresh clone crashes at
   import until it is created. Watch path handling and line endings across OSes.
+  SSH keys are per machine; the Mac is now configured with its own.
 - GNews quota is 100 requests/day, resets 00:00 UTC. Step 10 will need real
   failure responses to test against; budget for it.
 
 ## Next Action
+
 Step 9: register/wire pass. Review that every tool is registered consistently
-and that the composition root in __init__.py is coherent now that five real
-tools exist.
+and that the composition root in `__init__.py` is coherent now that five real
+tools exist. Scope includes tool-name consistency (provider-specific `gnews`
+versus capability-style `weather` and `clock`, which the D19 planner will read),
+the three different shapes the `do_*` methods have drifted into, and whether
+registration order or a failed construction matters.
+
+Files needed at chat start: `__init__.py`, `registry.py`, and the `do_*` methods
+from `repl.py`.
