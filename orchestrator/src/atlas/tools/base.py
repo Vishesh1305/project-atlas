@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from atlas.error import ToolError
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,4 +40,8 @@ class Tool(ABC):
         except ValidationError as e:
             logger.warning("Validation failed for tool '%s' : %s", self.name, e)
             return f"Invalid input for '{self.name}' : {e}"
-        return self._execute(validated_input)
+        try:
+            return self._execute(validated_input)
+        except ToolError as e:
+            logger.warning("Tool failed for tool '%s' : %s", self.name, e)
+            return str(e)
