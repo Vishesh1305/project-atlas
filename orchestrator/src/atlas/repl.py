@@ -13,48 +13,71 @@ class AtlasRepl(cmd.Cmd):
         self.registry = registry
 
     def do_calculate(self, arg: str) -> None:
-        """Calculates any given mathematical expression"""
+        """Calculates any given mathematical expression
+
+        Usage: calculate <expression>
+        Example: calculate 2 + 3 * 4
+        """
         if not arg:
-            print(
-                f"Invalid Expression input in: {arg}. Make sure you are not leaving any "
-                f" unnecessary whitespaces"
-            )
+            # print(
+            #     f"Invalid Expression input in: {arg}. Make sure you are not leaving any "
+            #     f" unnecessary whitespaces"
+            # )
+            print("No expression given. Type one, e.g. 'calculate 2 + 3 * 4'.")
             return
-        calculate_tool = self.registry.retrieve("calculate")
-        assert calculate_tool is not None
-        result = calculate_tool.run({"expression": arg})
+        tool = self.registry.retrieve("util.calculate")
+        # assert calculate_tool is not None
+        result = tool.run({"expression": arg})
         print(result)
 
     def do_open_app(self, arg: str) -> None:
-        """Opens apps that are present in the allowlist"""
+        """Opens apps that are present in the allowlist
+
+        Usage: open_app <app name>
+        Example: open_app notepad
+        """
         if not arg:
-            print(
-                f"Invalid Expression input in = {arg}. Make sure you are not leaving "
-                f" any unnecessary whitespaces"
-            )
+            # print(
+            #     f"Invalid Expression input in = {arg}. Make sure you are not leaving "
+            #     f" any unnecessary whitespaces"
+            # )
+            print("No app name given. Type one, e.g. 'open_app notepad'.")
             return
-        open_tool = self.registry.retrieve("open_app")
-        assert open_tool is not None
-        result = open_tool.run({"app_name": arg})
+        tool = self.registry.retrieve("pc.open_app")
+        # assert open_tool is not None
+        result = tool.run({"app_name": arg})
         print(result)
 
     def do_open_url(self, arg: str) -> None:
-        """Opens any given URL"""
+        """Opens any given URL
+
+        Usage: open_url <url>
+        Example: open_url https://example.com
+        """
         if not arg:
-            print(
-                f"Invalid URL input in = {arg}. Make sure you are not leaving any unnecessary"
-                f" whitespaces and also the URL is correct"
-            )
+            # print(
+            #     f"Invalid URL input in = {arg}. Make sure you are not leaving any unnecessary"
+            #     f" whitespaces and also the URL is correct"
+            # )
+            print("No URL given. Type one, e.g. 'open_url https://example.com'.")
             return
-        open_url = self.registry.retrieve("open_url")
-        assert open_url is not None
-        result = open_url.run({"url": arg})
+        tool = self.registry.retrieve("pc.open_url")
+        # assert open_url is not None
+        result = tool.run({"url": arg})
         print(result)
 
     def do_clock(self, arg: str) -> None:
-        clock_tool = self.registry.retrieve("clock")
-        assert clock_tool is not None
-        result = clock_tool.run({})
+        """Shows the current local date and time
+
+        Usage: clock
+        Takes no arguments.
+        """
+        if arg:
+            print("clock takes no arguments. Type just 'clock'.")
+            return
+        tool = self.registry.retrieve("util.clock")
+        # assert clock_tool is not None
+        result = tool.run({})
         print(result)
 
     def do_quit(self, arg: str) -> bool:
@@ -63,17 +86,21 @@ class AtlasRepl(cmd.Cmd):
         return True
 
     def do_weather(self, arg: str) -> None:
-        """Prints weather data"""
+        """Prints weather data
+
+        Usage: weather <place>
+        Example: weather vancouver, canada
+        """
         if not arg:
             print("No place name given. Type a place, e.g. 'weather Vancouver'.")
             return
+        tool = self.registry.retrieve("info.weather")
+        # assert weather_tool is not None
         place = geocode(arg)
         if place is None:
             print("No such place")
             return
-        weather_tool = self.registry.retrieve("weather")
-        assert weather_tool is not None
-        result = weather_tool.run({"latitude": place.latitude, "longitude": place.longitude})
+        result = tool.run({"latitude": place.latitude, "longitude": place.longitude})
 
         parts = []
         if place.name:
@@ -91,8 +118,7 @@ class AtlasRepl(cmd.Cmd):
         """Search recent news headlines by topic.
 
         Usage: news <topic>
-
-        :param arg: the whole argument string, treated as a single topic.
+        Example: news formula 1
         """
         if not arg:
             print("No topic given. Type a topic, e.g. 'news formula 1'.")
@@ -100,10 +126,10 @@ class AtlasRepl(cmd.Cmd):
 
         topic = arg
 
-        tool = self.registry.retrieve("gnews")
-        if tool is None:
-            print("News tool is not registered.")
-            return
+        tool = self.registry.retrieve("info.news")
+        # if tool is None:
+        #     print("News tool is not registered.")
+        #     return
 
         result = tool.run({"topic": topic})
         print(result)

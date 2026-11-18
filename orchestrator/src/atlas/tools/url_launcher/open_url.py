@@ -14,7 +14,7 @@ class OpenUrlInput(BaseModel):
 class OpenUrlTool(Tool):
     @property
     def name(self) -> str:
-        return "open_url"
+        return "pc.open_url"
 
     @property
     def description(self) -> str:

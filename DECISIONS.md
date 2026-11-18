@@ -435,6 +435,7 @@ tool's build, not now.
 ## Decision 25: Docstring Convention (reST/Sphinx style)
 **Date:** August 6, 2026
 **Status:** Decided
+**Amended by:** D38 (scoped exception: `do_*` REPL command docstrings).
 
 **Decided:** ATLAS uses reStructuredText/Sphinx-style docstrings project-wide.
 Format: :param:, :returns:, :raises:. Type information is NOT duplicated in the
@@ -829,3 +830,136 @@ confirmation screen IS the security boundary for sensitive actions.
 **Timing:** Phase 3 at the earliest, after Phase 2 establishes the protocol and
 after the orchestrator API exists. Building the GUI first would mean designing
 the API under UI pressure, which produces a worse API.
+
+---
+
+## D36: Composition root lives in `atlas/app.py`
+**Date:** October 26, 2026
+**Status:** Decided
+
+**Decided:** `main()`, together with all tool construction and registration,
+lives in `src/atlas/app.py`. `src/atlas/__init__.py` is empty.
+`[project.scripts]` is `atlas = "atlas.app:main"`.
+
+**Trigger:** importing any `atlas` submodule executes `atlas/__init__.py` first.
+With `main()` there, `import atlas.registry` imported every tool and
+`config.py`, whose module-level `settings = Settings()` reads `.env`.
+`tests/test_registry.py`, which tests a dict wrapper, could not even be
+collected without a valid `.env`.
+
+**Verified:** with `.env` moved aside, `pytest tests/test_registry.py` passes
+after the move. `tests/test_tools.py` still errors without `.env`, because it
+imports a real tool; that is the separate `Settings()`-at-import item (DEFERRED,
+Step 11).
+
+**Rule:** `__init__.py` stays empty. No convenience re-export of `main`: it
+would re-couple every import to the whole application.
+
+**Alternatives considered:**
+
+- Leave it in `__init__.py` (rejected: the import side effect above).
+- `atlas/__main__.py` (not chosen: adds `python -m atlas`, which nothing needs
+  yet, and points the entry point at a dunder module).
+
+---
+
+## D37: Tool names are namespaced capabilities
+**Date:** October 26, 2026
+**Status:** Decided
+
+**Decided:** registry names take the form `<namespace>.<capability>`.
+
+| Names | Namespace meaning |
+|---|---|
+| `util.calculate`, `util.clock` | `util`: local, no network |
+| `info.weather`, `info.news` | `info`: read-only information fetched over the network |
+| `pc.open_app`, `pc.open_url` | `pc`: actions on the user's machine, via the PC Agent from Phase 2 |
+
+**Rules:**
+
+- The name states the capability, never the provider. Files, classes and
+  packages may name the provider (`gnews.py`, `GNewsTool`); the registry name
+  does not.
+- REPL commands stay dot-free (`news`, `weather`, `open_app`). `cmd.Cmd` reads
+  only letters, digits and underscore as the command word (`identchars`), so
+  `info.news x` would parse as command `info`. REPL command and tool name are
+  therefore always different strings.
+- Each name currently appears twice as a string literal: the tool's `name`
+  property and the REPL's `retrieve(...)` call. mypy cannot check that they
+  match. Guarded by a Step 12 test (DEFERRED).
+
+**Context:** the Phase 0 spec named the stubs `util.calculate`, `pc.open_url`,
+`pc.open_app`. The prefixes were dropped during Phase 0 with no decision
+record, and Step 8 then introduced provider naming (`gnews`). D37 restores the
+namespaces and records them.
+
+**Alternatives considered:**
+
+- Flat capability names (`news`, `open_app`) (rejected: nothing in the name
+  marks the remote boundary Phase 2 introduces).
+- Provider names (`gnews`, `gdelt`, `rss`) (rejected: binds the D19 planner's
+  prompt and the logs to a vendor; swapping a provider renames a tool).
+- Underscore namespaces (`pc_open_app`) so the REPL command equals the tool
+  name (not chosen: `news` already differed from `gnews`, so there was no
+  equality to preserve).
+
+**Reasoning:** from Phase 2 the namespace carries security meaning: `pc.*` is
+the boundary where ATLAS acts on the user's machine. Renaming before the
+planner, the logs and later phases depend on the names was the cheapest point.
+
+**Open, parked:** whether GDELT becomes a second tool or a second provider
+behind `info.news`. See DEFERRED A3.
+
+---
+
+## D38: Registry `retrieve` raises; canonical REPL command shape
+**Date:** October 26, 2026
+**Status:** Decided
+
+**Decided, registry:**
+
+- `ToolRegistry.retrieve(name) -> Tool` indexes the dict directly and raises
+  `KeyError` on a missing name. It never returns `None`.
+- The internal dict is `_tools` (leading underscore: internal by convention).
+- `register` keeps its explicit membership check (LBYL). Dict assignment
+  overwrites silently, so EAFP is not available there.
+- The REPL does not catch `KeyError`. Registration is static, so a missing name
+  on the REPL path is a typo, a programming error, and should crash with a
+  traceback naming it. The D19 planner is the one caller where a missing name
+  is a runtime event (an LLM can invent a tool name); it catches `KeyError` at
+  its own call site.
+
+**Decided, `do_*` shape.** Every REPL command follows, in order:
+
+1. Docstring: summary, `Usage:` line, `Example:` line.
+2. Argument guard: says what is missing and gives an example. Commands that
+   take no arguments (`clock`) reject any argument rather than ignoring it, per
+   Decision 2: `clock tomorrow` silently printing the current time would be a
+   guess.
+3. `retrieve(...)`, unchecked.
+4. Pre-processing, if any, after the retrieve. `do_weather` no longer spends a
+   geocoding request before discovering a missing tool.
+5. Run, print, presentation.
+
+One local variable, named `tool`, per method.
+
+**Scoped exception to D25:** `do_*` docstrings are user-facing help text,
+because `cmd` prints them verbatim for `help <command>`. They carry summary,
+usage and example only, with no `:param:` lines. Tool classes and helpers keep
+full D25 reST.
+
+**Alternatives considered:**
+
+- R1: keep `Tool | None` and replace the asserts with explicit
+  `if tool is None` checks. Not chosen, but sound: mypy rejects `.run()` on
+  `Tool | None`, so R1 cannot forget a check. The real defect was the five
+  `assert`s, which `python -O` deletes. R2 was chosen because it removes six
+  repeated checks and fails louder on a bug.
+
+**Verified:** `ToolRegistry().retrieve('clok')` raises `KeyError: 'clok'`.
+`test_retrieve_missing_raises` added. `help` lists all eight commands as
+documented. `clock foo` is rejected. Superseded code (old guard messages,
+asserts, the `do_news` None check, the old `retrieve` body) is kept as comments
+for now; see DEFERRED Step 11.
+
+**Supersedes:** the DEFERRED Step 11 "registry missing-name contract" item.

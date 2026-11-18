@@ -37,6 +37,8 @@ real failure responses to test against, so budget requests for it.
   instead, making the return type plain `Tool` and removing per-caller checks
   entirely. Then fix `do_weather`. Deciding the contract once is worth more
   than fixing the symptom in two places.
+  **RESOLVED in Step 9 (D38):** `retrieve` raises `KeyError`; the asserts and
+  the `do_news` None check are commented out.
 - `weather` `description` property is still the placeholder "Weather tool".
   Rewrite for the D19 planner.
 - Same for `GNewsTool.description`, currently "Provides News headlines and
@@ -45,21 +47,41 @@ real failure responses to test against, so budget requests for it.
 - Shared empty-arg guard helper. `clock` breaks the "all commands reject empty
   arg" assumption, so the pattern is currently inconsistent across commands.
   Phase 0 carryover.
+  **Update (Step 9, D38):** all `do_*` methods now share one shape, and `clock`
+  rejects arguments with an inverted guard. The helper must cover both cases:
+  argument required, and argument forbidden.
 - Unify logging style across tools.
 - **README new-machine setup note.** `.env` is gitignored and does not sync. A
   fresh clone crashes at import with a `ValidationError` naming the calc
   fields, because `Settings()` runs at module import in `config.py`. Document:
   copy `.env.example` to `.env` and fill it. Hit once already on the Mac
   migration.
+  Also reaches the test suite: `tests/test_tools.py` cannot be collected
+  without `.env`. `tests/test_registry.py` no longer depends on it (D36).
 - **`lang=en` is hardcoded** in `gnews.py`'s params dict. Candidate for a
   `GNewsInput` field.
 - **`le=10` on `GNewsInput.count` is tier-specific.** It is the GNews free-tier
   ceiling of articles per request, not a universal limit. Wrong the moment the
   plan changes, and invisible six months from now if not recorded here.
+- **Commented-out superseded code** kept during Step 9: old guard messages,
+  asserts and the `do_news` None check in `repl.py`, and the old `retrieve`
+  body in `registry.py`. Git holds the history. Decide whether to remove it
+  before Phase 1 close.
 
 ### Step 12 — Tests
 
 No automated tests exist yet. All Phase 1 verification has been manual.
+
+**Correction (2026-10-26):** the line above is wrong. Phase 0 tests exist:
+`tests/test_registry.py` (3 tests, one added in Step 9) and
+`tests/test_tools.py` (1 test). What is missing is Phase 1 coverage.
+
+- **REPL-to-registry name test (D37).** Every tool name the REPL passes to
+  `retrieve` must be registered. mypy cannot check string literals against
+  each other, and under D38 a mismatch crashes only when that command runs.
+  May require splitting registry construction out of `main()` (for example a
+  `build_registry()` function) so a test can build it without starting the
+  REPL.
 
 ### Noted option, not planned work — generic `Tool` base
 
@@ -96,6 +118,13 @@ Recorded because the instinct will recur: a comprehension is not a free win
 when the loop body does something the type checker can follow and the
 comprehension does not.
 
+### Noted, not planned: `help` output indentation
+
+`cmd` prints `do_*` docstrings verbatim, so `help <command>` shows
+continuation lines with their 8-space source indentation. The fix would be
+overriding `do_help` to apply `inspect.cleandoc`. Not planned: the REPL is a
+development surface, and D35 makes the GUI the user surface.
+
 ### Deferred by earlier decisions
 
 - **D26:** `clock` is local-time only. Timezone support postponed.
@@ -125,6 +154,20 @@ comprehension does not.
 - **Protocol should be designed with a third client in mind.** The REPL and the
   agent are two clients today; the GUI (D35) will be a third. Designing the
   Phase 2 protocol as if only the REPL exists would mean reworking it later.
+- **Failed-construction policy.** `OpenAppTool.__init__` reads
+  `config/allowlist.toml`; if the file is missing, ATLAS dies at startup with
+  `FileNotFoundError`. Acceptable today (the file is committed, so a missing
+  file means a broken checkout). Decide a policy before any constructor does
+  I/O that can fail at runtime, such as connecting to the PC Agent: crash
+  startup, or register the tool as unavailable.
+- **Allowlist is Windows-only.** `config/allowlist.toml` holds only Windows
+  paths (`notepad.exe`, `C:\\...`). Harmless while `pc.open_app` is a stub.
+  Under D34 the allowlist needs per-platform entries, and the Mac is the main
+  machine.
+- **Type `sensitivity`.** `Tool.sensitivity` is a plain `str`; the registry
+  test's `"fake sensitivity"` passes, so a typo such as `"confrim"` would
+  silently bypass a confirmation gate. Make it a `Literal` or `Enum` alongside
+  the first `confirm`-level tool, where the gate is first enforced.
 
 ---
 
@@ -190,6 +233,10 @@ Not a decision, an option. Recorded so it is not rediscovered.
 `README.md` still says "Status: Phase 0 - Foundations (in progress)" and its
 phase table has no GUI phase and no mention of the agent being cross-platform.
 Update when Phase 1 closes, not before, so it is one edit rather than three.
+
+**Ordering locked (2026-10-26):** the README rewrite is the FIRST action once
+Step 12 is complete, before the Phase 1 completion checklist and before any
+Phase 2 planning. Close G5 in the same commit.
 
 ---
 
@@ -257,6 +304,11 @@ Teaches three things nothing else has:
   except `url` must be optional.
 - Client-side pacing. Documented ~1 req/5 sec, reported stricter in practice.
   First real rate limiter, and the concept transfers to the C++ agent.
+
+**Naming question (D37):** decide whether GDELT is a second tool (D29 gives
+it a different role: volume, not ranked headlines) or a second provider
+behind `info.news`. Either way its registry name states the capability, not
+`gdelt`.
 
 ### A4 — RSS source tool
 

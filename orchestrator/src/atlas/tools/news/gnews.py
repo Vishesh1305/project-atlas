@@ -73,7 +73,7 @@ def format_articles(articles: list[Article]) -> str:
 class GNewsTool(Tool):
     @property
     def name(self) -> str:
-        return "gnews"
+        return "info.news"
 
     @property
     def description(self) -> str:

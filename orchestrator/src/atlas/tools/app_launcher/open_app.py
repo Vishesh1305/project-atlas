@@ -22,7 +22,7 @@ class OpenAppTool(Tool):
 
     @property
     def name(self) -> str:
-        return "open_app"
+        return "pc.open_app"
 
     @property
     def description(self) -> str:

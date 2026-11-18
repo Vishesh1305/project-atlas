@@ -8,16 +8,12 @@ logger = logging.getLogger(__name__)
 
 class ToolRegistry:
     def __init__(self) -> None:
-        self.registry: dict[str, Tool] = {}
+        self._tools: dict[str, Tool] = {}
 
     def register(self, tool_to_register: Tool) -> None:
-        if tool_to_register.name in self.registry:
+        if tool_to_register.name in self._tools:
             raise ValueError(f"Tool {tool_to_register.name} already registered")
-        self.registry[tool_to_register.name] = tool_to_register
+        self._tools[tool_to_register.name] = tool_to_register
 
-    def retrieve(self, tool_name: str) -> Tool | None:
-        requested_tool = self.registry.get(tool_name, None)
-        if requested_tool is None:
-            logger.warning("Tool %s not found in registry", tool_name)
-            return None
-        return requested_tool
+    def retrieve(self, tool_name: str) -> Tool:
+        return self._tools[tool_name]

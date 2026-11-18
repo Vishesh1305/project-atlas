@@ -12,7 +12,7 @@ class WeatherInput(BaseModel):
 class WeatherTool(Tool):
     @property
     def name(self) -> str:
-        return "weather"
+        return "info.weather"
 
     @property
     def description(self) -> str:

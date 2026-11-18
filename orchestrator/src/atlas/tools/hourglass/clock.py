@@ -26,7 +26,7 @@ class ClockInput(BaseModel):
 class ClockTool(Tool):
     @property
     def name(self) -> str:
-        return "clock"
+        return "util.clock"
 
     @property
     def description(self) -> str:

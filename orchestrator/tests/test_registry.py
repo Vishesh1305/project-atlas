@@ -19,8 +19,7 @@ class FakeTool(Tool):
         return "fake description"
 
     @property
-    def sensitivity(self) -> str:
-        return "fake sensitivity"
+    def sensitivity(self) -> str:        return "fake sensitivity"
 
     @property
     def input_model(self) -> type[BaseModel]:
@@ -45,3 +44,8 @@ def test_register_duplicate_raises() -> None:
     registry.register(tool)
     with pytest.raises(ValueError):
         registry.register(tool)
+
+def test_retrieve_missing_raises() -> None:
+    registry = ToolRegistry()
+    with pytest.raises(KeyError):
+        registry.retrieve("missing")

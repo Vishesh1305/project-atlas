@@ -16,7 +16,7 @@ class CalculateInput(BaseModel):
 class CalculateTool(Tool):
     @property
     def name(self) -> str:
-        return "calculate"
+        return "util.calculate"
 
     @property
     def description(self) -> str:
